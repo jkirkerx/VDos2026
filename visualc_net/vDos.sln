@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.7.11919.86
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vDos", "vDos.vcxproj", "{7FCFFB9B-8629-4D51-849C-8490CECF8AB7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vDosPrintMonitor", "vDosPrintMonitor\vDosPrintMonitor.csproj", "{D80AF0B0-3AB4-4A39-8596-6E9E47F5B9DE}"
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "vDosInstaller", "vDosInstaller\vDosInstaller.wixproj", "{90E0277B-046D-4053-BB1E-51BAFB85F4D5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7FCFFB9B-8629-4D51-849C-8490CECF8AB7}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7FCFFB9B-8629-4D51-849C-8490CECF8AB7}.Debug|Win32.Build.0 = Debug|Win32
+		{7FCFFB9B-8629-4D51-849C-8490CECF8AB7}.Release|Win32.ActiveCfg = Release|Win32
+		{7FCFFB9B-8629-4D51-849C-8490CECF8AB7}.Release|Win32.Build.0 = Release|Win32
+		{D80AF0B0-3AB4-4A39-8596-6E9E47F5B9DE}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{D80AF0B0-3AB4-4A39-8596-6E9E47F5B9DE}.Debug|Win32.Build.0 = Debug|Any CPU
+		{D80AF0B0-3AB4-4A39-8596-6E9E47F5B9DE}.Release|Win32.ActiveCfg = Release|Any CPU
+		{D80AF0B0-3AB4-4A39-8596-6E9E47F5B9DE}.Release|Win32.Build.0 = Release|Any CPU
+		{90E0277B-046D-4053-BB1E-51BAFB85F4D5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{90E0277B-046D-4053-BB1E-51BAFB85F4D5}.Debug|Win32.Build.0 = Debug|Win32
+		{90E0277B-046D-4053-BB1E-51BAFB85F4D5}.Release|Win32.ActiveCfg = Release|Win32
+		{90E0277B-046D-4053-BB1E-51BAFB85F4D5}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

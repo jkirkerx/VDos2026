@@ -1,0 +1,18 @@
+2026-06-24 13:43:20 LPT3 TCP 192.168.1.111:9100 configured
+2026-06-24 13:44:30 LPT3 TCP 192.168.1.111:9100 bytes=808 result=sent
+2026-06-24 14:02:03 LPT3 TCP 192.168.1.111:9100 configured
+2026-06-24 14:02:38 LPT3 TCP 192.168.1.111:9100 bytes=808 result=sent
+2026-06-24 14:05:44 LPT3 TCP 192.168.1.111:9100 configured
+2026-06-24 14:21:30 LPT3 TCP 192.168.1.111:9100 configured
+2026-06-24 14:22:06 LPT3 TCP 192.168.1.111:9100 bytes=808 result=sent
+2026-06-24 14:26:00 LPT3 TCP 192.168.1.111:9100 configured
+2026-06-24 14:27:10 LPT3 TCP 192.168.1.111:9100 configured
+2026-06-24 14:27:45 LPT3 TCP 192.168.1.111:9100 bytes=808 result=sent detail=resolved=192.168.1.111 family=2 requestedBytes=808 sentBytes=808 sendCalls=1 shutdown=ok0
+2026-06-24 14:30:48 LPT3 TCP 192.168.1.111:9100 configured
+2026-06-24 14:31:22 LPT3 TCP 192.168.1.111:9100 bytes=808 result=sent detail=resolved=192.168.1.111 family=2 requestedBytes=808 sentBytes=808 sendCalls=1 shutdown=ok0 raw=C:\Users\jkirkerx\source\repos\vDos\visualc_net\Debug\#LPT3.tcp.raw
+2026-06-24 14:35:13 LPT3 TCP 192.168.1.111:9100 configured
+2026-06-24 14:35:59 LPT3 TCP 192.168.1.111:9100 bytes=808 result=sent detail=resolved=192.168.1.111 family=2 requestedBytes=808 sentBytes=808 sendCalls=1 shutdown=ok0 raw=C:\Users\jkirkerx\source\repos\vDos\visualc_net\Debug\#LPT3.tcp.raw
+2026-06-24 15:05:16 LPT3 TCP 192.168.1.111:9102 configured
+2026-06-24 15:05:53 LPT3 TCP 192.168.1.111:9102 bytes=808 result=failed detail=connect to TCP printer 192.168.1.111:9102 failed with Winsock error 10061 (No connection could be made because the target machine actively refused it.  ) raw=C:\Users\jkirkerx\source\repos\vDos\visualc_net\Debug\#LPT3.tcp.raw
+2026-06-24 15:10:33 LPT3 TCP 192.168.1.111:9102 configured
+2026-06-24 15:11:24 LPT3 TCP 192.168.1.111:9102 bytes=808 result=failed detail=connect to TCP printer 192.168.1.111:9102 failed with Winsock error 10061 (No connection could be made because the target machine actively refused it.  ) raw=C:\Users\jkirkerx\source\repos\vDos\visualc_net\Debug\#LPT3.tcp.raw

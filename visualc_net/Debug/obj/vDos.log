@@ -1,0 +1,4 @@
+﻿  Generating code
+  Finished generating code
+LINK : warning LNK4286: symbol '_sprintf' defined in 'vdos.obj' is imported by 'freetype255.lib(bdf.obj)'
+  vDos.vcxproj -> C:\Users\jkirkerx\source\repos\vDos\visualc_net\Debug\vDos.exe

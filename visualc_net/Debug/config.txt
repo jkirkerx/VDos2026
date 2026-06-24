@@ -1,0 +1,24 @@
+rem vDos 2026 sample configuration.
+rem Edit this file after install to match the customer's printers.
+
+FRAME = ON
+WINDOW = 55
+
+REM Printing
+REM ========
+REM vDos sends LPT output directly to a network printer or print server.
+REM Format: LPTx = TCP printer-address:raw-port
+REM
+REM Common raw/JetDirect printer port: 9100.
+REM Some print servers expose multiple queues as 9100, 9101, and 9102.
+REM Replace 192.168.1.111 with the printer or print-server IP address.
+REM
+REM Use DUMMY for any LPT port that should be ignored.
+
+LPT1 = TCP 192.168.1.111:9100
+LPT2 = TCP 192.168.1.111:9101
+LPT3 = TCP 192.168.1.111:9102
+
+REM LPT1 = DUMMY
+REM LPT2 = DUMMY
+REM LPT3 = DUMMY
