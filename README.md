@@ -4,6 +4,11 @@ vDos 2026 is a maintained Windows build of vDos focused on running legacy DOS bu
 
 The original vDos project provided the DOS compatibility layer. Printing support was historically weak and inconsistent, especially for network printers. This fork keeps the vDos application working while improving the raw TCP printing path used by printers and print servers that accept direct port 9100-style jobs.
 
+
+## Maintainer Credit
+
+This vDos 2026 fork is maintained by John Kirker. The current work includes cleaning up the project structure, modernizing the Visual Studio/WiX build, packaging the installer, and making direct TCP network printing usable for real customer environments.
+
 ## Repository Layout
 
 ### Root Files
