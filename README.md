@@ -7,7 +7,7 @@ The original vDos project provided the DOS compatibility layer. Printing support
 
 ## Maintainer Credit
 
-This vDos 2026 fork is maintained by John Kirker. The current work includes cleaning up the project structure, modernizing the Visual Studio/WiX build, packaging the installer, and making direct TCP network printing usable for real customer environments.
+This vDos 2026 fork is maintained by Jim Kirker. The current work includes cleaning up the project structure, modernizing the Visual Studio/WiX build, packaging the installer, and making direct TCP network printing usable for real customer environments.
 
 ## Repository Layout
 
