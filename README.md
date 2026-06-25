@@ -4,6 +4,16 @@ vDos 2026 is a maintained Windows build of vDos focused on running legacy DOS bu
 
 The original vDos project provided the DOS compatibility layer. Printing support was historically weak and inconsistent, especially for network printers. This fork keeps the vDos application working while improving the raw TCP printing path used by printers and print servers that accept direct port 9100-style jobs.
 
+## Why This Exists
+
+This project exists because keeping legacy DOS business software alive on modern Windows should not require a decade of failed workarounds.
+
+Over the years, solutions like VMware, DOSBox, and other compatibility layers were tested for real business use, especially around printing. They either failed outright, were too fragile, or could not reliably handle the kind of raw printer output that older DOS accounting and check-printing systems still depend on.
+
+vDos 2026 is focused on the practical parts that matter in the field: launching the DOS application, preserving usable configuration files, supporting raw network printing, supporting direct LPT/COM device output, and packaging everything in an installer that can be deployed on customer machines.
+
+Maintained by [Jim Kirker](https://jkirkerx.com), this fork is intended to save other people from having to rediscover the same fixes the hard way.
+
 
 ## Maintainer Credit
 
