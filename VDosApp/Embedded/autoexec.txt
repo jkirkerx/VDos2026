@@ -1,0 +1,13 @@
+rem vDos 2026 startup for AccountMate.
+@ECHO OFF
+
+rem Map the AccountMate folder as vDos C:.
+rem Inside vDos, C: below points to Windows D:\AMP\.
+USE C: D:\AMP\
+C:
+CD \
+rem Disable Phar Lap/FoxPro virtual-memory paging; vDos does not emulate protected-mode paging fully.
+SET DOSX=-NOVM
+SET FOXPROX=-NOVM
+CALL AMP.BAT
+EXIT

@@ -1,0 +1,88 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package Name="vDos 2026" Manufacturer="vDos 2026" Version="1.0.0.0" UpgradeCode="8B6D6614-B0D3-4D3D-B660-4911C5E5E601" Scope="perMachine">
+    <MajorUpgrade DowngradeErrorMessage="A newer version of vDos 2026 is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+    <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLFOLDER]" After="CostFinalize" Sequence="both" />
+    <Icon Id="VDosIcon" SourceFile="$(var.VDosIconPath)" />
+    <Property Id="ARPPRODUCTICON" Value="VDosIcon" />
+    <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+    <CustomAction Id="LaunchPrintMonitor" FileRef="PrintMonitorExeFile" ExeCommand="&quot;[INSTALLFOLDER]&quot;" Execute="immediate" Return="asyncNoWait" Impersonate="yes" />
+    <CustomAction Id="StopPrintMonitor" Directory="INSTALLFOLDER" ExeCommand="&quot;[SystemFolder]taskkill.exe&quot; /IM vDosPrintMonitor.exe /T /F" Execute="deferred" Return="ignore" Impersonate="no" />
+    <InstallExecuteSequence>
+      <Custom Action="StopPrintMonitor" Before="RemoveFiles" Condition="(REMOVE=&quot;ALL&quot;) OR UPGRADINGPRODUCTCODE" />
+      <Custom Action="LaunchPrintMonitor" After="InstallFinalize" Condition="NOT Installed" />
+    </InstallExecuteSequence>
+
+    <Feature Id="Main" Title="vDos 2026" Level="1">
+      <ComponentGroupRef Id="ApplicationFiles" />
+      <ComponentGroupRef Id="ConfigurationFiles" />
+      <ComponentGroupRef Id="ShortcutFiles" />
+      <ComponentGroupRef Id="DesktopShortcuts" />
+      <ComponentGroupRef Id="StartupShortcuts" />
+    </Feature>
+
+    <StandardDirectory Id="ProgramFilesFolder">
+      <Directory Id="INSTALLFOLDER" Name="vDos 2026" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="vDos 2026" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="DesktopFolder" />
+    <StandardDirectory Id="StartupFolder" />
+
+    <ComponentGroup Id="ApplicationFiles" Directory="INSTALLFOLDER">
+      <Component Id="InstallFolderPermissions" Guid="7F8C7D9C-579C-44B2-96D7-CE62CF42A7C0">
+        <CreateFolder>
+          <Permission User="Users" GenericRead="yes" GenericWrite="yes" GenericExecute="yes" />
+        </CreateFolder>
+      </Component>
+      <Component Id="VDosExe">
+        <File Id="VDosExeFile" Source="$(var.VDosOutputDir)\vDos.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="SdlDll">
+        <File Id="SdlDllFile" Source="$(var.VDosOutputDir)\SDL.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="PrintMonitorExe">
+        <File Id="PrintMonitorExeFile" Source="$(var.MonitorOutputDir)\vDosPrintMonitor.exe" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <ComponentGroup Id="ConfigurationFiles" Directory="INSTALLFOLDER">
+      <Component Id="AutoexecTxt" NeverOverwrite="yes">
+        <File Id="AutoexecTxtFile" Source="$(var.VDosOutputDir)\autoexec.txt" KeyPath="yes">
+          <Permission User="Users" GenericRead="yes" GenericWrite="yes" />
+        </File>
+      </Component>
+      <Component Id="ConfigTxt" NeverOverwrite="yes">
+        <File Id="ConfigTxtFile" Source="$(var.VDosOutputDir)\config.txt" KeyPath="yes">
+          <Permission User="Users" GenericRead="yes" GenericWrite="yes" />
+        </File>
+      </Component>
+    </ComponentGroup>
+
+    <ComponentGroup Id="ShortcutFiles" Directory="ApplicationProgramsFolder">
+      <Component Id="StartMenuShortcuts">
+        <Shortcut Id="VDosShortcut" Name="vDos 2026" Target="[#VDosExeFile]" WorkingDirectory="INSTALLFOLDER" Icon="VDosIcon" />
+        <Shortcut Id="PrintMonitorShortcut" Name="vDos Print Monitor" Target="[#PrintMonitorExeFile]" WorkingDirectory="INSTALLFOLDER" Arguments="[INSTALLFOLDER]" />
+        <RemoveFolder Id="RemoveApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\vDos2026" Name="StartMenuShortcuts" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+
+    <ComponentGroup Id="StartupShortcuts" Directory="StartupFolder">
+      <Component Id="PrintMonitorStartupShortcut">
+        <Shortcut Id="StartupPrintMonitorShortcut" Name="vDos Print Monitor" Target="[#PrintMonitorExeFile]" WorkingDirectory="INSTALLFOLDER" Arguments="[INSTALLFOLDER]" />
+        <RegistryValue Root="HKCU" Key="Software\vDos2026" Name="PrintMonitorStartupShortcut" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="DesktopShortcuts" Directory="DesktopFolder">
+      <Component Id="DesktopShortcut">
+        <Shortcut Id="DesktopVDosShortcut" Name="vDos 2026" Target="[#VDosExeFile]" WorkingDirectory="INSTALLFOLDER" Icon="VDosIcon" />
+        <RegistryValue Root="HKCU" Key="Software\vDos2026" Name="DesktopShortcut" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Package>
+</Wix>

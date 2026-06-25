@@ -1,2 +1,41 @@
 # Visual Studio local workspace cache
 .vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Root build outputs
+/Debug/
+/Release/
+/bin/
+/obj/
+
+# Installer build outputs
+/vDosInstaller/bin/
+/vDosInstaller/obj/
+
+# .NET monitor build outputs
+/vDosPrintMonitor/bin/
+/vDosPrintMonitor/obj/
+/vDosPrintMonitor/publish/
+
+# vDos runtime dependency folder: keep SDL.dll only
+/VDosApp/bin/**
+!/VDosApp/bin/
+!/VDosApp/bin/SDL.dll
+
+# Generated compiler/installer files
+*.log
+*.tlog
+*.obj
+*.pdb
+*.ipdb
+*.iobj
+*.ilk
+*.wixpdb
+*.cab
+*.bsc
+*.sbr
+*.asm
+*.recipe

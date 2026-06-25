@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{7FCFFB9B-8629-4D51-849C-8490CECF8AB7}</ProjectGuid>
+    <RootNamespace>dosbox</RootNamespace>
+    <ProjectName>vDos</ProjectName>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings"></ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\obj\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\obj\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">VDosApp\SDL-1.2.15\include;$(IncludePath)</IncludePath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">VDosApp\ft255\lib\x86;VDosApp\SDL-1.2.15\lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">VDosApp\SDL-1.2.15\include;$(IncludePath)</IncludePath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">VDosApp\SDL-1.2.15\lib\x86;VDosApp\ft255\lib\x86;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Midl>
+      <TypeLibraryName>.\Debug/dosbox.tlb</TypeLibraryName>
+      <HeaderFileName></HeaderFileName>
+    </Midl>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <AdditionalIncludeDirectories>VDosApp\include;VDosApp\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeaderOutputFile>$(IntDir)vdos.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
+      <BrowseInformation>false</BrowseInformation>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>false</OmitFramePointers>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>winmm.lib;sdl.lib;sdlmain.lib;ShlwApi.lib;freetype255.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(IntDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <SubSystem>Windows</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention></DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <FixedBaseAddress>false</FixedBaseAddress>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>MSVCRT;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Midl>
+      <TypeLibraryName>.\Release/dosbox.tlb</TypeLibraryName>
+      <HeaderFileName></HeaderFileName>
+    </Midl>
+    <ClCompile>
+      <Optimization>Full</Optimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <AdditionalIncludeDirectories>VDosApp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <PrecompiledHeaderOutputFile>$(IntDir)vdos.pch</PrecompiledHeaderOutputFile>
+      <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
+      <BrowseInformation>false</BrowseInformation>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>winmm.lib;sdl.lib;sdlmain.lib;ShlwApi.lib;freetype255.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <ImportLibrary>$(IntDir)$(TargetName).lib</ImportLibrary>
+      <ProgramDatabaseFile></ProgramDatabaseFile>
+      <GenerateMapFile>false</GenerateMapFile>
+      <SubSystem>Windows</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <FixedBaseAddress>false</FixedBaseAddress>
+      <DataExecutionPrevention></DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <ShowProgress>NotSet</ShowProgress>
+      <AdditionalOptions>/OPT:REF  /LTCG %(AdditionalOptions)</AdditionalOptions>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="VDosApp\src\dos\devicePRT.cpp" />
+    <ClCompile Include="VDosApp\src\dos\TcpPrinter.cpp" />
+    <ClCompile Include="VDosApp\src\gui\freetype.cpp" />
+    <ClCompile Include="VDosApp\src\hardware\parport.cpp" />
+    <ClCompile Include="VDosApp\src\hardware\serialport.cpp" />
+    <ClCompile Include="VDosApp\src\ints\ems.cpp" />
+    <ClCompile Include="VDosApp\src\vdos.cpp" />
+    <ClCompile Include="VDosApp\src\cpu\callback.cpp" />
+    <ClCompile Include="VDosApp\src\cpu\core_normal.cpp" />
+    <ClCompile Include="VDosApp\src\cpu\cpu.cpp" />
+    <ClCompile Include="VDosApp\src\cpu\flags.cpp" />
+    <ClCompile Include="VDosApp\src\cpu\paging.cpp" />
+    <ClCompile Include="VDosApp\src\hardware\iohandler.cpp" />
+    <ClCompile Include="VDosApp\src\hardware\keyboard.cpp" />
+    <ClCompile Include="VDosApp\src\hardware\memory.cpp" />
+    <ClCompile Include="VDosApp\src\hardware\pic.cpp" />
+    <ClCompile Include="VDosApp\src\hardware\timer.cpp" />
+    <ClCompile Include="VDosApp\src\hardware\vga.cpp" />
+    <ClCompile Include="VDosApp\src\hardware\vga_attr.cpp" />
+    <ClCompile Include="VDosApp\src\hardware\vga_crtc.cpp" />
+    <ClCompile Include="VDosApp\src\hardware\vga_dac.cpp" />
+    <ClCompile Include="VDosApp\src\hardware\vga_draw.cpp" />
+    <ClCompile Include="VDosApp\src\hardware\vga_gfx.cpp" />
+    <ClCompile Include="VDosApp\src\hardware\vga_memory.cpp" />
+    <ClCompile Include="VDosApp\src\hardware\vga_misc.cpp" />
+    <ClCompile Include="VDosApp\src\hardware\vga_seq.cpp" />
+    <ClCompile Include="VDosApp\src\gui\render.cpp" />
+    <ClCompile Include="VDosApp\src\gui\sdlmain.cpp" />
+    <ClCompile Include="VDosApp\src\ints\bios.cpp" />
+    <ClCompile Include="VDosApp\src\ints\bios_keyboard.cpp" />
+    <ClCompile Include="VDosApp\src\ints\mouse.cpp" />
+    <ClCompile Include="VDosApp\src\ints\xms.cpp" />
+    <ClCompile Include="VDosApp\src\ints\int10.cpp" />
+    <ClCompile Include="VDosApp\src\ints\int10_char.cpp" />
+    <ClCompile Include="VDosApp\src\ints\int10_memory.cpp" />
+    <ClCompile Include="VDosApp\src\ints\int10_modes.cpp" />
+    <ClCompile Include="VDosApp\src\ints\int10_pal.cpp" />
+    <ClCompile Include="VDosApp\src\ints\int10_put_pixel.cpp" />
+    <ClCompile Include="VDosApp\src\ints\int10_vptable.cpp" />
+    <ClCompile Include="VDosApp\src\shell\shell.cpp" />
+    <ClCompile Include="VDosApp\src\shell\shell_batch.cpp" />
+    <ClCompile Include="VDosApp\src\shell\shell_cmds.cpp" />
+    <ClCompile Include="VDosApp\src\shell\shell_misc.cpp" />
+    <ClCompile Include="VDosApp\src\misc\messages.cpp" />
+    <ClCompile Include="VDosApp\src\misc\programs.cpp" />
+    <ClCompile Include="VDosApp\src\misc\setup.cpp" />
+    <ClCompile Include="VDosApp\src\misc\support.cpp" />
+    <ClCompile Include="VDosApp\src\dos\dos.cpp" />
+    <ClCompile Include="VDosApp\src\dos\dos_classes.cpp" />
+    <ClCompile Include="VDosApp\src\dos\dos_devices.cpp" />
+    <ClCompile Include="VDosApp\src\dos\dos_execute.cpp" />
+    <ClCompile Include="VDosApp\src\dos\dos_files.cpp" />
+    <ClCompile Include="VDosApp\src\dos\dos_ioctl.cpp" />
+    <ClCompile Include="VDosApp\src\dos\dos_memory.cpp" />
+    <ClCompile Include="VDosApp\src\dos\dos_misc.cpp" />
+    <ClCompile Include="VDosApp\src\dos\dos_tables.cpp" />
+    <ClCompile Include="VDosApp\src\dos\drives.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="VDosApp\src\winres.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="VDosApp\include\config.h" />
+    <ClInclude Include="VDosApp\include\devicePRT.h" />
+    <ClInclude Include="VDosApp\include\TcpPrinter.h" />
+    <ClInclude Include="VDosApp\include\ttf.h" />
+    <ClInclude Include="VDosApp\include\vDosTTF.h" />
+    <ClInclude Include="VDosApp\src\cpu\instructions.h" />
+    <ClInclude Include="VDosApp\src\cpu\lazyflags.h" />
+    <ClInclude Include="VDosApp\src\cpu\modrm.h" />
+    <ClInclude Include="VDosApp\src\cpu\core_normal\helpers.h" />
+    <ClInclude Include="VDosApp\src\cpu\core_normal\prefix_0f.h" />
+    <ClInclude Include="VDosApp\src\cpu\core_normal\prefix_66.h" />
+    <ClInclude Include="VDosApp\src\cpu\core_normal\prefix_66_0f.h" />
+    <ClInclude Include="VDosApp\src\cpu\core_normal\prefix_none.h" />
+    <ClInclude Include="VDosApp\src\cpu\core_normal\string.h" />
+    <ClInclude Include="VDosApp\src\cpu\core_normal\support.h" />
+    <ClInclude Include="VDosApp\src\cpu\core_normal\table_ea.h" />
+    <ClInclude Include="VDosApp\src\ints\xms.h" />
+    <ClInclude Include="VDosApp\src\ints\int10.h" />
+    <ClInclude Include="VDosApp\src\platform\visualc\config.h" />
+    <ClInclude Include="VDosApp\src\platform\visualc\unistd.h" />
+    <ClInclude Include="VDosApp\src\dos\dev_con.h" />
+    <ClInclude Include="VDosApp\include\bios.h" />
+    <ClInclude Include="VDosApp\include\callback.h" />
+    <ClInclude Include="VDosApp\include\cpu.h" />
+    <ClInclude Include="VDosApp\include\dos_inc.h" />
+    <ClInclude Include="VDosApp\include\dos_system.h" />
+    <ClInclude Include="VDosApp\include\vdos.h" />
+    <ClInclude Include="VDosApp\include\inout.h" />
+    <ClInclude Include="VDosApp\include\logging.h" />
+    <ClInclude Include="VDosApp\include\mem.h" />
+    <ClInclude Include="VDosApp\include\mouse.h" />
+    <ClInclude Include="VDosApp\include\paging.h" />
+    <ClInclude Include="VDosApp\include\parport.h" />
+    <ClInclude Include="VDosApp\include\programs.h" />
+    <ClInclude Include="VDosApp\include\regs.h" />
+    <ClInclude Include="VDosApp\include\render.h" />
+    <ClInclude Include="VDosApp\include\serialport.h" />
+    <ClInclude Include="VDosApp\include\shell.h" />
+    <ClInclude Include="VDosApp\include\support.h" />
+    <ClInclude Include="VDosApp\include\vga.h" />
+    <ClInclude Include="VDosApp\include\video.h" />
+    <ClInclude Include="VDosApp\src\resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="VDosApp\src\vDOS.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="VDosApp\Embedded\autoexec.txt" />
+    <None Include="VDosApp\Embedded\config.txt" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Target Name="SeedRuntimeTextFiles" AfterTargets="Build">
+    <ItemGroup>
+      <DefaultRuntimeTextFile Include="$(MSBuildThisFileDirectory)VDosApp\Embedded\autoexec.txt" />
+      <DefaultRuntimeTextFile Include="$(MSBuildThisFileDirectory)VDosApp\Embedded\config.txt" />
+      <DefaultRuntimeBinaryFile Include="$(MSBuildThisFileDirectory)VDosApp\bin\SDL.dll" Condition="Exists('$(MSBuildThisFileDirectory)VDosApp\bin\SDL.dll')" />
+    </ItemGroup>
+    <Copy SourceFiles="@(DefaultRuntimeTextFile)" SkipUnchangedFiles="true" DestinationFolder="$(OutDir)" Condition="!Exists('$(OutDir)%(DefaultRuntimeTextFile.Filename)%(DefaultRuntimeTextFile.Extension)')" />
+    <Copy SourceFiles="@(DefaultRuntimeBinaryFile)" SkipUnchangedFiles="true" DestinationFolder="$(OutDir)" Condition="!Exists('$(OutDir)%(DefaultRuntimeBinaryFile.Filename)%(DefaultRuntimeBinaryFile.Extension)')" />
+  </Target>
+  <ImportGroup Label="ExtensionTargets"></ImportGroup>
+</Project>
