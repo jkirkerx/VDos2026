@@ -14,6 +14,9 @@ vDos 2026 is focused on the practical parts that matter in the field: launching 
 
 Maintained by [Jim Kirker](https://jkirkerx.com), this fork is intended to save other people from having to rediscover the same fixes the hard way.
 
+## Support This Project
+
+If vDos 2026 saves you time or helps keep a legacy DOS application running, you can support ongoing maintenance through [GitHub Sponsors](https://github.com/sponsors/jkirkerx). Donations help cover testing time, packaging work, and continued compatibility fixes.
 
 ## Maintainer Credit
 
