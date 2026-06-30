@@ -86,7 +86,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>winmm.lib;sdl.lib;sdlmain.lib;ShlwApi.lib;freetype255.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;sdl.lib;sdlmain.lib;ShlwApi.lib;freetype255.lib;ws2_32.lib;winspool.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -138,7 +138,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>winmm.lib;sdl.lib;sdlmain.lib;ShlwApi.lib;freetype255.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;sdl.lib;sdlmain.lib;ShlwApi.lib;freetype255.lib;ws2_32.lib;winspool.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -263,7 +263,7 @@
     <ClInclude Include="VDosApp\src\resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="VDosApp\src\vDOS.ico" />
+    <None Include="VDosApp\src\vDos2026.ico" />
   </ItemGroup>
   <ItemGroup>
     <None Include="VDosApp\Embedded\autoexec.txt" />

@@ -356,7 +356,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="VDosApp\src\vDOS.ico" />
+    <None Include="VDosApp\src\vDos2026.ico" />
     <None Include="..\autoexec.txt">
       <Filter>Runtime Files</Filter>
     </None>

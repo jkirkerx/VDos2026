@@ -6,7 +6,8 @@
     <IntermediateOutputPath>obj\$(Configuration)</IntermediateOutputPath>
     <VDosOutputDir>$(MSBuildThisFileDirectory)..\$(Configuration)</VDosOutputDir>
     <MonitorOutputDir>$(MSBuildThisFileDirectory)..\vDosPrintMonitor\publish\win-x86</MonitorOutputDir>
-    <VDosIconPath>$(MSBuildThisFileDirectory)..\VDosApp\src\vDos.ico</VDosIconPath>
+    <ConfigOutputDir>$(MSBuildThisFileDirectory)..\vDosConfig\publish\win-x86</ConfigOutputDir>
+    <VDosIconPath>$(MSBuildThisFileDirectory)..\VDosApp\src\vDos2026.ico</VDosIconPath>
     <InstallerOutput>$(MSBuildThisFileDirectory)$(OutputPath)\vDos2026.msi</InstallerOutput>
     <ProjectGuid>{90e0277b-046d-4053-bb1e-51bafb85f4d5}</ProjectGuid>
   </PropertyGroup>
@@ -16,10 +17,11 @@
   <Target Name="BuildInputs">
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\vDos.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Build" />
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\vDosPrintMonitor\vDosPrintMonitor.csproj" Properties="Configuration=$(Configuration);RuntimeIdentifier=win-x86;SelfContained=true;PublishSingleFile=true;IncludeNativeLibrariesForSelfExtract=true;EnableCompressionInSingleFile=true;PublishDir=$(MonitorOutputDir)\" Targets="Restore;Publish" />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\vDosConfig\vDosConfig.csproj" Properties="Configuration=$(Configuration);RuntimeIdentifier=win-x86;SelfContained=true;PublishSingleFile=true;IncludeNativeLibrariesForSelfExtract=true;EnableCompressionInSingleFile=true;PublishDir=$(ConfigOutputDir)\" Targets="Restore;Publish" />
   </Target>
   <Target Name="Build" DependsOnTargets="BuildInputs">
     <MakeDir Directories="$(MSBuildThisFileDirectory)$(OutputPath);$(MSBuildThisFileDirectory)$(IntermediateOutputPath)" />
-    <Exec Command="wix build &quot;$(MSBuildThisFileDirectory)Package.wxs&quot; -arch x86 -ext WixToolset.UI.wixext -out &quot;$(InstallerOutput)&quot; -intermediateFolder &quot;$(MSBuildThisFileDirectory)$(IntermediateOutputPath)&quot; -d VDosOutputDir=&quot;$(VDosOutputDir)&quot; -d MonitorOutputDir=&quot;$(MonitorOutputDir)&quot; -d VDosIconPath=&quot;$(VDosIconPath)&quot;" />
+    <Exec Command="wix build &quot;$(MSBuildThisFileDirectory)Package.wxs&quot; -arch x86 -ext WixToolset.UI.wixext -out &quot;$(InstallerOutput)&quot; -intermediateFolder &quot;$(MSBuildThisFileDirectory)$(IntermediateOutputPath)&quot; -d VDosOutputDir=&quot;$(VDosOutputDir)&quot; -d MonitorOutputDir=&quot;$(MonitorOutputDir)&quot; -d ConfigOutputDir=&quot;$(ConfigOutputDir)&quot; -d VDosIconPath=&quot;$(VDosIconPath)&quot;" />
   </Target>
   <Target Name="Clean">
     <RemoveDir Directories="$(MSBuildThisFileDirectory)$(OutputPath);$(MSBuildThisFileDirectory)$(IntermediateOutputPath)" />

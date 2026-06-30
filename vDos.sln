@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.7.11919.86
@@ -8,6 +8,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vDosPrintMonitor", "vDosPrintMonitor\vDosPrintMonitor.csproj", "{D80AF0B0-3AB4-4A39-8596-6E9E47F5B9DE}"
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "vDosInstaller", "vDosInstaller\vDosInstaller.wixproj", "{90E0277B-046D-4053-BB1E-51BAFB85F4D5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vDosConfig", "vDosConfig\vDosConfig.csproj", "{23370A19-649F-4A59-B8C8-B1972DB64551}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{90E0277B-046D-4053-BB1E-51BAFB85F4D5}.Debug|Win32.Build.0 = Debug|Win32
 		{90E0277B-046D-4053-BB1E-51BAFB85F4D5}.Release|Win32.ActiveCfg = Release|Win32
 		{90E0277B-046D-4053-BB1E-51BAFB85F4D5}.Release|Win32.Build.0 = Release|Win32
+		{23370A19-649F-4A59-B8C8-B1972DB64551}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{23370A19-649F-4A59-B8C8-B1972DB64551}.Debug|Win32.Build.0 = Debug|Any CPU
+		{23370A19-649F-4A59-B8C8-B1972DB64551}.Release|Win32.ActiveCfg = Release|Any CPU
+		{23370A19-649F-4A59-B8C8-B1972DB64551}.Release|Win32.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -2,6 +2,7 @@
 #include "TcpPrinter.h"
 #include "process.h"
 #include <Shellapi.h>
+#include <Winspool.h>
 #include <time.h>
 #include "vDos.h"
 #include "support.h"
@@ -160,6 +161,254 @@ static bool DumpTcpRaw(const char* filename, const std::string& data)
 	fclose(fh);
 	return true;
 	}
+static bool ParseWindowsDeviceDestination(const std::string& destination, char* deviceName, size_t deviceNameSize)
+	{
+	if (deviceNameSize == 0)
+		return false;
+	deviceName[0] = 0;
+	if (destination.empty())
+		return false;
+
+	const char* start = destination.c_str();
+	while (*start == ' ' || *start == '\t')
+		start++;
+
+	const char* end = start + strlen(start);
+	while (end > start && (end[-1] == ' ' || end[-1] == '\t'))
+		end--;
+
+	if (end <= start)
+		return false;
+
+	if (*start == '"')
+		{
+		start++;
+		const char* quote = strchr(start, '"');
+		if (!quote)
+			return false;
+		const char* afterQuote = quote + 1;
+		while (*afterQuote == ' ' || *afterQuote == '\t')
+			afterQuote++;
+		if (*afterQuote != ':' || afterQuote[1] != 0)
+			return false;
+		end = quote;
+		}
+	else if (end[-1] != ':')
+		return false;
+
+	size_t len = end - start;
+	if (len && start[len-1] == ':')
+		len--;
+	if (!len || len >= deviceNameSize)
+		return false;
+
+	memcpy(deviceName, start, len);
+	deviceName[len] = 0;
+	if (strchr(deviceName, '\\'))
+		return false;
+
+	if ((strnicmp(deviceName, "LPT", 3) && strnicmp(deviceName, "COM", 3)) || deviceName[3] < '1' || deviceName[3] > '9' || deviceName[4] != 0)
+		return false;
+
+	strcat_s(deviceName, deviceNameSize, ":");
+	return true;
+	}
+
+static bool WriteRawToWindowsDevice(const char* deviceName, const std::string& data, std::string& detail)
+	{
+	HANDLE device = CreateFileA(deviceName, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (device == INVALID_HANDLE_VALUE)
+		{
+		char message[256];
+		sprintf_s(message, sizeof(message), "Could not open Windows device %s. Error %lu", deviceName, GetLastError());
+		detail = message;
+		return false;
+		}
+
+	const char* ptr = data.c_str();
+	DWORD remaining = (DWORD)data.size();
+	while (remaining)
+		{
+		DWORD written = 0;
+		DWORD chunk = remaining > 32768 ? 32768 : remaining;
+		if (!WriteFile(device, ptr, chunk, &written, NULL) || written == 0)
+			{
+			char message[256];
+			sprintf_s(message, sizeof(message), "Could not write to Windows device %s. Error %lu", deviceName, GetLastError());
+			detail = message;
+			CloseHandle(device);
+			return false;
+			}
+		ptr += written;
+		remaining -= written;
+		}
+
+	CloseHandle(device);
+	return true;
+	}
+static std::string FormatWindowsError(const char* action, DWORD errorCode)
+	{
+	char errorText[256];
+	errorText[0] = 0;
+	FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS, NULL, errorCode, 0, errorText, sizeof(errorText), NULL);
+	for (char* ch = errorText; *ch; ch++)
+		if (*ch == '\r' || *ch == '\n')
+			*ch = ' ';
+
+	char message[512];
+	sprintf_s(message, sizeof(message), "%s failed with Windows error %lu (%s)", action, errorCode, errorText[0] ? errorText : "no error text available");
+	return message;
+	}
+static const char* SkipSpaces(const char* value)
+	{
+	while (*value == ' ' || *value == '\t')
+		value++;
+	return value;
+	}
+static bool ParseKeywordArgument(const std::string& destination, const char* keyword, std::string& value)
+	{
+	value.clear();
+	const char* input = SkipSpaces(destination.c_str());
+	size_t keywordLen = strlen(keyword);
+	if (strnicmp(input, keyword, keywordLen) || (input[keywordLen] && input[keywordLen] != ' ' && input[keywordLen] != '\t'))
+		return false;
+
+	const char* start = SkipSpaces(input + keywordLen);
+	if (!*start)
+		return false;
+
+	const char* end = NULL;
+	if (*start == '"')
+		{
+		start++;
+		end = strchr(start, '"');
+		if (!end)
+			return false;
+		const char* tail = SkipSpaces(end + 1);
+		if (*tail)
+			return false;
+		}
+	else
+		{
+		end = start + strlen(start);
+		while (end > start && (end[-1] == ' ' || end[-1] == '\t'))
+			end--;
+		}
+
+	if (end <= start)
+		return false;
+
+	value.assign(start, end - start);
+	return true;
+	}
+static bool ResolvePrinterNameForPort(const std::string& portName, std::string& printerName, std::string& detail)
+	{
+	printerName.clear();
+	DWORD needed = 0;
+	DWORD returned = 0;
+	EnumPrintersA(PRINTER_ENUM_LOCAL|PRINTER_ENUM_CONNECTIONS, NULL, 2, NULL, 0, &needed, &returned);
+	if (!needed)
+		{
+		detail = FormatWindowsError("EnumPrinters", GetLastError());
+		return false;
+		}
+
+	std::vector<BYTE> buffer(needed);
+	if (!EnumPrintersA(PRINTER_ENUM_LOCAL|PRINTER_ENUM_CONNECTIONS, NULL, 2, buffer.data(), needed, &needed, &returned))
+		{
+		detail = FormatWindowsError("EnumPrinters", GetLastError());
+		return false;
+		}
+
+	PRINTER_INFO_2A* printers = (PRINTER_INFO_2A*)buffer.data();
+	for (DWORD idx = 0; idx < returned; idx++)
+		if (printers[idx].pPortName && !stricmp(printers[idx].pPortName, portName.c_str()) && printers[idx].pPrinterName)
+			{
+			printerName = printers[idx].pPrinterName;
+			return true;
+			}
+
+	char message[256];
+	sprintf_s(message, sizeof(message), "No Windows printer queue is using port %s", portName.c_str());
+	detail = message;
+	return false;
+	}
+static bool ParseSpoolPrinterDestination(const std::string& destination, std::string& printerName, std::string& detail)
+	{
+	detail.clear();
+	if (ParseKeywordArgument(destination, "printer", printerName) || ParseKeywordArgument(destination, "queue", printerName))
+		return true;
+
+	std::string portName;
+	if (ParseKeywordArgument(destination, "port", portName))
+		return ResolvePrinterNameForPort(portName, printerName, detail);
+
+	return false;
+	}
+static bool WriteRawToPrinterQueue(const char* printerName, const std::string& data, std::string& detail)
+	{
+	HANDLE printer = NULL;
+	if (!OpenPrinterA((LPSTR)printerName, &printer, NULL))
+		{
+		detail = FormatWindowsError("OpenPrinter", GetLastError());
+		return false;
+		}
+
+	DOC_INFO_1A docInfo;
+	docInfo.pDocName = (LPSTR)"vDos print job";
+	docInfo.pOutputFile = NULL;
+	docInfo.pDatatype = (LPSTR)"RAW";
+
+	DWORD jobId = StartDocPrinterA(printer, 1, (LPBYTE)&docInfo);
+	if (!jobId)
+		{
+		detail = FormatWindowsError("StartDocPrinter", GetLastError());
+		ClosePrinter(printer);
+		return false;
+		}
+
+	bool success = true;
+	if (!StartPagePrinter(printer))
+		{
+		detail = FormatWindowsError("StartPagePrinter", GetLastError());
+		success = false;
+		}
+
+	const char* ptr = data.c_str();
+	DWORD remaining = (DWORD)data.size();
+	while (success && remaining)
+		{
+		DWORD written = 0;
+		DWORD chunk = remaining > 32768 ? 32768 : remaining;
+		if (!WritePrinter(printer, (LPVOID)ptr, chunk, &written) || written == 0)
+			{
+			detail = FormatWindowsError("WritePrinter", GetLastError());
+			success = false;
+			break;
+			}
+		ptr += written;
+		remaining -= written;
+		}
+
+	if (!EndPagePrinter(printer) && success)
+		{
+		detail = FormatWindowsError("EndPagePrinter", GetLastError());
+		success = false;
+		}
+	if (!EndDocPrinter(printer) && success)
+		{
+		detail = FormatWindowsError("EndDocPrinter", GetLastError());
+		success = false;
+		}
+	ClosePrinter(printer);
+	if (success)
+		{
+		char message[256];
+		sprintf_s(message, sizeof(message), "requestedBytes=%u", (unsigned int)data.size());
+		detail = message;
+		}
+	return success;
+	}
 static void BuildTcpRawDumpName(char* name, size_t nameSize, const char* portName)
 	{
 	time_t now = time(NULL);
@@ -198,6 +447,31 @@ static bool BuildTcpRawDumpTempPath(char* filename, size_t filenameSize, const c
 	BuildTcpRawDumpName(filename+used, filenameSize-used, portName);
 	return true;
 	}
+static std::string LogToken(std::string value)
+	{
+	for (size_t i = 0; i < value.size(); i++)
+		if (value[i] == ' ' || value[i] == '\t')
+			value[i] = '_';
+	return value;
+	}
+static void LogPrintStatus(const char* filename, const char* portName, const char* backend, const char* target, size_t bytes, bool success, const std::string& detail, const char* rawFile)
+	{
+	FILE* fh = fopen(filename, "a");
+	if (!fh)
+		return;
+	time_t now = time(NULL);
+	struct tm localTime;
+	localtime_s(&localTime, &now);
+	char stamp[32];
+	strftime(stamp, sizeof(stamp), "%Y-%m-%d %H:%M:%S", &localTime);
+	fprintf(fh, "%s %s %s %s bytes=%u result=%s", stamp, portName, backend, target, (unsigned int)bytes, success ? "sent" : "failed");
+	if (!detail.empty())
+		fprintf(fh, " detail=%s", detail.c_str());
+	if (rawFile && *rawFile)
+		fprintf(fh, " raw=%s", rawFile);
+	fprintf(fh, "\n");
+	fclose(fh);
+	}
 static void LogTcpPrint(const char* filename, const char* portName, const char* host, int port, size_t bytes, bool success, const std::string& detail, const char* rawFile)
 	{
 	FILE* fh = fopen(filename, "a");
@@ -230,13 +504,39 @@ void device_PRT::CommitData()
 		{
 		std::string detail;
 		bool sent = TcpPrinter_Send(tcpHost, tcpPort, rawdata, detail);
-		if (printDebug)
-			LogTcpPrint(tcpLog, GetName(), tcpHost.c_str(), tcpPort, rawdata.size(), sent, detail, tcpRawDump);
+		LogTcpPrint(tcpLog, GetName(), tcpHost.c_str(), tcpPort, rawdata.size(), sent, detail, tcpRawDump);
 		if (!sent)
 			MessageBox(sdlHwnd, detail.c_str(), "vDos - TCP Printer Error", MB_OK|MB_ICONWARNING);
 		rawdata.clear();
 		return;
 		}
+	std::string printerName;
+	std::string detail;
+	if (ParseSpoolPrinterDestination(destination, printerName, detail))
+		{
+		bool sent = WriteRawToPrinterQueue(printerName.c_str(), rawdata, detail);
+		LogPrintStatus(tcpLog, GetName(), "PRINTER", LogToken(printerName).c_str(), rawdata.size(), sent, detail, tcpRawDump);
+		if (!sent)
+			MessageBox(sdlHwnd, detail.c_str(), "vDos - Printer Queue Error", MB_OK|MB_ICONWARNING);
+		rawdata.clear();
+		return;
+		}
+	else if (!detail.empty())
+		{
+		MessageBox(sdlHwnd, detail.c_str(), "vDos - Printer Queue Error", MB_OK|MB_ICONWARNING);
+		rawdata.clear();
+		return;
+		}
+	char windowsDevice[16];
+	if (ParseWindowsDeviceDestination(destination, windowsDevice, sizeof(windowsDevice)))
+		{
+		detail.clear();
+		if (!WriteRawToWindowsDevice(windowsDevice, rawdata, detail))
+			MessageBox(sdlHwnd, detail.c_str(), "vDos - Printer Port Error", MB_OK|MB_ICONWARNING);
+		rawdata.clear();
+		return;
+		}
+
 	if (DPhandle != -1)																// DOSprinter previously used
 		GetExitCodeProcess((HANDLE)DPhandle, &DPexitcode);
 

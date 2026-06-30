@@ -2,7 +2,7 @@
 //#include "afxres.h"
 
 // icon resource
-vDOS_ico ICON "vDos.ico"
+vDOS_ico ICON "vDos2026.ico"
 
 // version resource
 VS_VERSION_INFO VERSIONINFO

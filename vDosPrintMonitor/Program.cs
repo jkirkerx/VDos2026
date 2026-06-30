@@ -1,4 +1,4 @@
-﻿namespace vDosPrintMonitor;
+namespace vDosPrintMonitor;
 
 internal static class Program
 {
@@ -168,7 +168,7 @@ internal sealed class PrintMonitorContext : ApplicationContext
 
         if (newest == null)
         {
-            ShowNotification("vDos Print Monitor", "No TCP print status has been logged yet.", ToolTipIcon.Info);
+            ShowNotification("vDos Print Monitor", "No print status has been logged yet.", ToolTipIcon.Info);
             return;
         }
 

@@ -8,6 +8,8 @@ REM Printing
 REM ========
 REM vDos sends LPT output directly to a network printer or print server.
 REM Format: LPTx = TCP printer-address:raw-port
+REM Format: LPTx = PRINTER "Windows printer queue name"
+REM Format: LPTx = PORT USB001
 REM
 REM Common raw/JetDirect printer port: 9100.
 REM Some print servers expose multiple queues as 9100, 9101, and 9102.
@@ -19,6 +21,8 @@ LPT1 = TCP 192.168.1.111:9100
 LPT2 = TCP 192.168.1.111:9101
 LPT3 = TCP 192.168.1.111:9102
 
+REM LPT1 = PRINTER "Lexmark MC3200 USB4"
+REM LPT1 = PORT USB004
 REM LPT1 = DUMMY
 REM LPT2 = DUMMY
 REM LPT3 = DUMMY
