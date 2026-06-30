@@ -26,7 +26,7 @@
     </StandardDirectory>
 
     <StandardDirectory Id="ProgramMenuFolder">
-      <Directory Id="ApplicationProgramsFolder" Name="vDos 2026" />
+      <Directory Id="ApplicationProgramsFolder" Name="vDos" />
     </StandardDirectory>
 
     <StandardDirectory Id="DesktopFolder" />
@@ -68,7 +68,7 @@
     <ComponentGroup Id="ShortcutFiles" Directory="ApplicationProgramsFolder">
       <Component Id="StartMenuShortcuts">
         <Shortcut Id="VDosShortcut" Name="vDos 2026" Target="[#VDosExeFile]" WorkingDirectory="INSTALLFOLDER" Icon="VDosIcon" />
-        <Shortcut Id="VDosConfigShortcut" Name="vDos 2026 Configurator" Target="[#VDosConfigExeFile]" WorkingDirectory="INSTALLFOLDER" Icon="VDosIcon" />
+        <Shortcut Id="VDosConfigShortcut" Name="VDosConfig" Target="[#VDosConfigExeFile]" WorkingDirectory="INSTALLFOLDER" Icon="VDosIcon" />
         <Shortcut Id="PrintMonitorShortcut" Name="vDos Print Monitor" Target="[#PrintMonitorExeFile]" WorkingDirectory="INSTALLFOLDER" Arguments="[INSTALLFOLDER]" />
         <RemoveFolder Id="RemoveApplicationProgramsFolder" On="uninstall" />
         <RegistryValue Root="HKCU" Key="Software\vDos2026" Name="StartMenuShortcuts" Type="integer" Value="1" KeyPath="yes" />
@@ -85,7 +85,7 @@
     <ComponentGroup Id="DesktopShortcuts" Directory="DesktopFolder">
       <Component Id="DesktopShortcut">
         <Shortcut Id="DesktopVDosShortcut" Name="vDos 2026" Target="[#VDosExeFile]" WorkingDirectory="INSTALLFOLDER" Icon="VDosIcon" />
-        <Shortcut Id="DesktopVDosConfigShortcut" Name="vDos 2026 Configurator" Target="[#VDosConfigExeFile]" WorkingDirectory="INSTALLFOLDER" Icon="VDosIcon" />
+        <Shortcut Id="DesktopVDosConfigShortcut" Name="VDosConfig" Target="[#VDosConfigExeFile]" WorkingDirectory="INSTALLFOLDER" Icon="VDosIcon" />
         <RegistryValue Root="HKCU" Key="Software\vDos2026" Name="DesktopShortcut" Type="integer" Value="1" KeyPath="yes" />
       </Component>
     </ComponentGroup>
