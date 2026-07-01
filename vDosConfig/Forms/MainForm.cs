@@ -1,3 +1,4 @@
+using System.Text.Json;
 using vDosConfig.Services;
 
 namespace vDosConfig.Forms
@@ -8,6 +9,9 @@ namespace vDosConfig.Forms
         private const int MaxDosWindowSize = 50;
         private const int DefaultDosWindowSize = 15;
         private static readonly Color MutedPlum = Color.FromArgb(112, 82, 112);
+        private static readonly JsonSerializerOptions SettingsJsonOptions = new() { WriteIndented = true };
+        private static readonly string SettingsFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "vDos 2026");
+        private static readonly string SettingsPath = Path.Combine(SettingsFolder, "vDosConfig.settings.json");
 
         private readonly LptAssignment?[] _lptAssignments = new LptAssignment?[3];
         private ApplicationTarget? _applicationTarget;
@@ -89,18 +93,73 @@ namespace vDosConfig.Forms
         {
             try
             {
-                LoadConfigSettings(Path.Combine(AppContext.BaseDirectory, "config.txt"));
-                LoadAutoexecSettings(Path.Combine(AppContext.BaseDirectory, "autoexec.txt"));
+                if (!File.Exists(SettingsPath))
+                    return;
+
+                var json = File.ReadAllText(SettingsPath);
+                var settings = JsonSerializer.Deserialize<ConfiguratorSettings>(json, SettingsJsonOptions);
+                if (settings != null)
+                    ApplySettings(settings);
             }
             catch (Exception ex)
             {
                 MessageBox.Show(
                     this,
-                    $"Existing settings could not be loaded.\r\n\r\n{ex.Message}",
+                    $"Saved configurator settings could not be loaded.\r\n\r\n{ex.Message}",
                     "vDos Configurator",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);
             }
+        }
+
+        private void SaveSettings()
+        {
+            Directory.CreateDirectory(SettingsFolder);
+            var json = JsonSerializer.Serialize(CaptureSettings(), SettingsJsonOptions);
+            File.WriteAllText(SettingsPath, json);
+        }
+
+        private ConfiguratorSettings CaptureSettings()
+        {
+            var targetPath = NormalizeApplicationTargetPath(textBoxTargetpath.Text.Trim());
+            return new ConfiguratorSettings
+            {
+                TargetPath = targetPath,
+                EnableDosX = checkBoxDosX.Checked,
+                EnableFoxPro = checkBoxFoxPro.Checked,
+                MouseEnabled = checkBoxAppMouseOn.Checked,
+                DosWindowSize = hScrollBarScale.Value,
+                LptDestinations = new[]
+                {
+                    (_lptAssignments[0] ?? LptAssignment.Dummy(1)).Destination,
+                    (_lptAssignments[1] ?? LptAssignment.Dummy(2)).Destination,
+                    (_lptAssignments[2] ?? LptAssignment.Dummy(3)).Destination
+                }
+            };
+        }
+
+        private void ApplySettings(ConfiguratorSettings settings)
+        {
+            checkBoxDosX.Checked = settings.EnableDosX;
+            checkBoxFoxPro.Checked = settings.EnableFoxPro;
+            checkBoxAppMouseOn.Checked = settings.MouseEnabled;
+            SetDosWindowSize(settings.DosWindowSize <= 0 ? DefaultDosWindowSize : settings.DosWindowSize);
+
+            for (var index = 0; index < Math.Min(settings.LptDestinations.Length, 3); index++)
+            {
+                var destination = settings.LptDestinations[index];
+                if (!string.IsNullOrWhiteSpace(destination))
+                    ApplyLoadedLptAssignment(index + 1, destination);
+            }
+
+            if (string.IsNullOrWhiteSpace(settings.TargetPath))
+                return;
+
+            var targetPath = NormalizeApplicationTargetPath(settings.TargetPath.Trim());
+            textBoxTargetpath.Text = targetPath;
+            var targetFolder = Path.GetDirectoryName(targetPath) ?? string.Empty;
+            var startupCommand = Path.GetFileName(targetPath);
+            _applicationTarget = new ApplicationTarget(targetPath, targetFolder, startupCommand, settings.EnableDosX, settings.EnableFoxPro);
         }
 
         private void LoadConfigSettings(string configPath)
@@ -737,6 +796,8 @@ namespace vDosConfig.Forms
 
             if (!TryAssignApplicationTarget(targetPath, showSuccessMessage: true))
                 return;
+
+            ApplySessionAssignedButtonStyle(buttonAssignTarget);
         }
 
         private bool TryAssignApplicationTarget(string targetPath, bool showSuccessMessage)
@@ -800,6 +861,7 @@ namespace vDosConfig.Forms
                 var configPath = Path.Combine(outputFolder, "config.txt");
                 var autoexecPath = Path.Combine(outputFolder, "autoexec.txt");
 
+                SaveSettings();
                 File.WriteAllText(configPath, BuildConfigText());
                 File.WriteAllText(autoexecPath, BuildAutoexecText(_applicationTarget!));
 
@@ -895,6 +957,17 @@ namespace vDosConfig.Forms
 
         private sealed record ApplicationTarget(string TargetPath, string TargetFolder, string StartupCommand, bool EnableDosX, bool EnableFoxPro);
 
+        private sealed class ConfiguratorSettings
+        {
+            public string TargetPath { get; set; } = string.Empty;
+            public bool EnableDosX { get; set; }
+            public bool EnableFoxPro { get; set; }
+            public bool MouseEnabled { get; set; }
+            public int DosWindowSize { get; set; } = DefaultDosWindowSize;
+            public string[] LptDestinations { get; set; } = { "DUMMY", "DUMMY", "DUMMY" };
+        }
+
+
         private sealed record LptControls(
             ComboBox PrinterTypeComboBox,
             TextBox IpAddressTextBox,
@@ -911,7 +984,7 @@ namespace vDosConfig.Forms
             }
 
             private int LptNumber { get; }
-            private string Destination { get; }
+            public string Destination { get; }
             public bool IsDummy => string.Equals(Destination, "DUMMY", StringComparison.OrdinalIgnoreCase);
 
             public static LptAssignment Dummy(int lptNumber) => new(lptNumber, "DUMMY");
