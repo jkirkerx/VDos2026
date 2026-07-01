@@ -4,6 +4,11 @@ namespace vDosConfig.Forms
 {
     public partial class MainForm : Form
     {
+        private const int MinDosWindowSize = 5;
+        private const int MaxDosWindowSize = 50;
+        private const int DefaultDosWindowSize = 15;
+        private static readonly Color MutedPlum = Color.FromArgb(112, 82, 112);
+
         private readonly LptAssignment?[] _lptAssignments = new LptAssignment?[3];
         private ApplicationTarget? _applicationTarget;
 
@@ -23,6 +28,8 @@ namespace vDosConfig.Forms
 
             checkBoxDosX.Checked = false;
             checkBoxFoxPro.Checked = false;
+            checkBoxAppMouseOn.Checked = false;
+            SetDosWindowSize(DefaultDosWindowSize);
 
             comboBoxLpt1PrinterType.SelectedItem = "None";
             comboBoxLpt2PrinterType.SelectedItem = "None";
@@ -30,6 +37,7 @@ namespace vDosConfig.Forms
 
             WireIpAddressKeyDownHandlers();
             WirePortKeyDownHandlers();
+            hScrollBarScale.ValueChanged += hScrollBarScale_ValueChanged;
             InitializeLptControlStates();
         }
 
@@ -104,7 +112,14 @@ namespace vDosConfig.Forms
             {
                 var line = rawLine.Trim();
                 if (!line.StartsWith("LPT", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (line.StartsWith("WINDOW", StringComparison.OrdinalIgnoreCase))
+                        ApplyLoadedDosWindowSize(line);
+                    else if (line.StartsWith("MOUSE", StringComparison.OrdinalIgnoreCase))
+                        ApplyLoadedMouseSetting(line);
+
                     continue;
+                }
 
                 var equalsIndex = line.IndexOf('=');
                 if (equalsIndex < 0)
@@ -118,6 +133,43 @@ namespace vDosConfig.Forms
             }
         }
 
+        private void ApplyLoadedDosWindowSize(string line)
+        {
+            var equalsIndex = line.IndexOf('=');
+            if (equalsIndex < 0)
+                return;
+
+            var value = line[(equalsIndex + 1)..].Trim();
+            var commaIndex = value.IndexOf(',');
+            if (commaIndex >= 0)
+                value = value[..commaIndex].Trim();
+
+            if (int.TryParse(value, out var dosWindowSize))
+                SetDosWindowSize(dosWindowSize);
+        }
+
+        private void ApplyLoadedMouseSetting(string line)
+        {
+            var equalsIndex = line.IndexOf('=');
+            if (equalsIndex < 0)
+                return;
+
+            var value = line[(equalsIndex + 1)..].Trim();
+            checkBoxAppMouseOn.Checked = value.Equals("ON", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void SetDosWindowSize(int value)
+        {
+            var clampedValue = Math.Clamp(value, MinDosWindowSize, MaxDosWindowSize);
+            hScrollBarScale.Value = clampedValue;
+            labelScaleValue.Text = clampedValue.ToString();
+        }
+
+        private void hScrollBarScale_ValueChanged(object? sender, EventArgs e)
+        {
+            labelScaleValue.Text = hScrollBarScale.Value.ToString();
+        }
+
         private void ApplyLoadedLptAssignment(int lptNumber, string destination)
         {
             var controls = GetLptControls(lptNumber);
@@ -125,6 +177,7 @@ namespace vDosConfig.Forms
             if (string.Equals(destination, "DUMMY", StringComparison.OrdinalIgnoreCase))
             {
                 controls.PrinterTypeComboBox.SelectedItem = "None";
+                ClearLptAssignmentFields(controls);
                 _lptAssignments[lptNumber - 1] = null;
                 return;
             }
@@ -209,6 +262,14 @@ namespace vDosConfig.Forms
             3 => new LptControls(comboBoxLpt3PrinterType, textBoxLpt3IPAddress, textBoxLpt3Port, comboBoxLpt3WindowsPrinters, comboBoxLpt3WindowsPort),
             _ => throw new ArgumentOutOfRangeException(nameof(lptNumber))
         };
+
+        private static void ClearLptAssignmentFields(LptControls controls)
+        {
+            controls.IpAddressTextBox.Clear();
+            controls.TcpPortTextBox.Clear();
+            controls.WindowsPrintersComboBox.SelectedIndex = -1;
+            controls.WindowsPortsComboBox.SelectedIndex = -1;
+        }
 
         private static void SelectComboBoxValue(ComboBox comboBox, string value)
         {
@@ -308,11 +369,19 @@ namespace vDosConfig.Forms
             Button assignButton)
         {
             var printerType = printerTypeComboBox.SelectedItem?.ToString();
+            var isNone = string.Equals(printerType, "None", StringComparison.OrdinalIgnoreCase);
             var isTcpIp = string.Equals(printerType, "TCP/IP", StringComparison.OrdinalIgnoreCase);
             var isWindowsPrinter = string.Equals(printerType, "Windows Printer", StringComparison.OrdinalIgnoreCase);
             var isWindowsPort = string.Equals(printerType, "Windows Port", StringComparison.OrdinalIgnoreCase);
 
-            if (isTcpIp && string.IsNullOrWhiteSpace(portTextBox.Text))
+            if (isNone)
+            {
+                ipAddressTextBox.Clear();
+                portTextBox.Clear();
+                windowsPrintersComboBox.SelectedIndex = -1;
+                windowsPortsComboBox.SelectedIndex = -1;
+            }
+            else if (isTcpIp && string.IsNullOrWhiteSpace(portTextBox.Text))
                 portTextBox.Text = "9100";
 
             SetLptControlsEnabled(
@@ -325,7 +394,7 @@ namespace vDosConfig.Forms
                 portEnabled: isTcpIp,
                 windowsPrintersEnabled: isWindowsPrinter,
                 windowsPortsEnabled: isWindowsPort,
-                assignEnabled: isTcpIp || isWindowsPrinter || isWindowsPort);
+                assignEnabled: isNone || isTcpIp || isWindowsPrinter || isWindowsPort);
         }
 
         private void comboBoxLpt1PrinterType_SelectedIndexChanged(object sender, EventArgs e)
@@ -547,11 +616,11 @@ namespace vDosConfig.Forms
                 return false;
             }
         }
-        private void buttonLpt1Assign_Click(object sender, EventArgs e) => AssignLpt(1, comboBoxLpt1PrinterType, textBoxLpt1IPAddress, textBoxLpt1Port, comboBoxLpt1WindowsPrinters, comboBoxLpt1WindowsPort);
+        private void buttonLpt1Assign_Click(object sender, EventArgs e) => AssignLpt(1, comboBoxLpt1PrinterType, textBoxLpt1IPAddress, textBoxLpt1Port, comboBoxLpt1WindowsPrinters, comboBoxLpt1WindowsPort, buttonLpt1Assign);
 
-        private void buttonLpt2Assign_Click(object sender, EventArgs e) => AssignLpt(2, comboBoxLpt2PrinterType, textBoxLpt2IPAddress, textBoxLpt2Port, comboBoxLpt2WindowsPrinters, comboBoxLpt2WindowsPort);
+        private void buttonLpt2Assign_Click(object sender, EventArgs e) => AssignLpt(2, comboBoxLpt2PrinterType, textBoxLpt2IPAddress, textBoxLpt2Port, comboBoxLpt2WindowsPrinters, comboBoxLpt2WindowsPort, buttonLpt2Assign);
 
-        private void buttonLpt3Assign_Click(object sender, EventArgs e) => AssignLpt(3, comboBoxLpt3PrinterType, textBoxLpt3IPAddress, textBoxLpt3Port, comboBoxLpt3WindowsPrinters, comboBoxLpt3WindowsPort);
+        private void buttonLpt3Assign_Click(object sender, EventArgs e) => AssignLpt(3, comboBoxLpt3PrinterType, textBoxLpt3IPAddress, textBoxLpt3Port, comboBoxLpt3WindowsPrinters, comboBoxLpt3WindowsPort, buttonLpt3Assign);
 
         private void AssignLpt(
             int lptNumber,
@@ -559,18 +628,28 @@ namespace vDosConfig.Forms
             TextBox ipAddressTextBox,
             TextBox tcpPortTextBox,
             ComboBox windowsPrintersComboBox,
-            ComboBox windowsPortsComboBox)
+            ComboBox windowsPortsComboBox,
+            Button assignButton)
         {
             if (!TryCreateLptAssignment(lptNumber, printerTypeComboBox, ipAddressTextBox, tcpPortTextBox, windowsPrintersComboBox, windowsPortsComboBox, out var assignment))
                 return;
 
             _lptAssignments[lptNumber - 1] = assignment;
+            ApplySessionAssignedButtonStyle(assignButton);
+            var action = assignment.IsDummy ? "unassigned" : "assigned";
             MessageBox.Show(
                 this,
-                $"LPT{lptNumber} assigned in memory.\r\n\r\n{assignment.ToConfigLine()}",
+                $"LPT{lptNumber} {action} in memory.\r\n\r\n{assignment.ToConfigLine()}",
                 "vDos Configurator",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
+        }
+
+        private static void ApplySessionAssignedButtonStyle(Button assignButton)
+        {
+            assignButton.BackColor = MutedPlum;
+            assignButton.FlatAppearance.MouseDownBackColor = MutedPlum;
+            assignButton.FlatAppearance.MouseOverBackColor = MutedPlum;
         }
 
         private bool TryCreateLptAssignment(
@@ -584,6 +663,12 @@ namespace vDosConfig.Forms
         {
             assignment = LptAssignment.Dummy(lptNumber);
             var printerType = printerTypeComboBox.SelectedItem?.ToString();
+
+            if (string.Equals(printerType, "None", StringComparison.OrdinalIgnoreCase))
+            {
+                assignment = LptAssignment.Dummy(lptNumber);
+                return true;
+            }
 
             if (string.Equals(printerType, "TCP/IP", StringComparison.OrdinalIgnoreCase))
             {
@@ -752,7 +837,8 @@ namespace vDosConfig.Forms
                 "rem Changes made here may be replaced the next time the configurator writes settings.",
                 "",
                 "FRAME = ON",
-                "WINDOW = 55",
+                $"WINDOW = {hScrollBarScale.Value}",
+                $"MOUSE = {(checkBoxAppMouseOn.Checked ? "ON" : "OFF")}",
                 "",
                 "REM Printing",
                 "REM ========",
@@ -826,6 +912,7 @@ namespace vDosConfig.Forms
 
             private int LptNumber { get; }
             private string Destination { get; }
+            public bool IsDummy => string.Equals(Destination, "DUMMY", StringComparison.OrdinalIgnoreCase);
 
             public static LptAssignment Dummy(int lptNumber) => new(lptNumber, "DUMMY");
 

@@ -81,17 +81,40 @@ Installer build output under `vDosInstaller/bin/` and `vDosInstaller/obj/` is ig
 
 ## Printing
 
-vDos 2026 supports direct raw TCP printing to network printers and print servers. Typical raw printing uses TCP port `9100`.
+vDos 2026 sends DOS `LPT` output as raw printer data. Configure printers in `config.txt` with one `LPTx = ...` entry per DOS printer port.
 
-Example `config.txt` entries:
+Supported printer destinations:
 
 ```text
-LPT1 = TCP 192.168.1.154:9100
+LPT1 = TCP 192.168.1.111:9100
+LPT2 = PRINTER "Windows printer queue name"
+LPT3 = PORT USB001
+```
+
+Destination formats:
+
+- `TCP host:port` - sends raw data directly to a network printer or print server. Raw/JetDirect printing commonly uses port `9100`; some print servers expose multiple queues as `9100`, `9101`, and `9102`.
+- `PRINTER "queue name"` - sends raw data through an installed Windows printer queue.
+- `PORT port-name` - resolves the Windows printer queue using a Windows port name such as `USB001`, then sends raw data through that queue.
+- `DUMMY` - discards output for an unused DOS printer port.
+
+Default sample `config.txt` entries:
+
+```text
+LPT1 = TCP 192.168.1.111:9100
 LPT2 = TCP 192.168.1.111:9101
 LPT3 = TCP 192.168.1.111:9102
 ```
 
-This avoids depending on Windows printer shares when direct network printing is the better fit.
+Replace the sample IP address and port numbers with the customer's printer or print-server values. Example alternatives:
+
+```text
+LPT1 = PRINTER "Lexmark MC3200 USB4"
+LPT1 = PORT USB004
+LPT2 = DUMMY
+```
+
+When printing through the TCP or Windows printer queue paths, vDos writes status to `#LPT1.tcp.log`, `#LPT2.tcp.log`, or `#LPT3.tcp.log` beside `vDos.exe`. The included `vDosPrintMonitor` watches those log files and shows Windows notifications for sent or failed jobs.
 
 ## Build Notes
 
