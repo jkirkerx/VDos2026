@@ -73,6 +73,9 @@ namespace vDosConfig.Forms
             comboBoxLpt3WindowsPrinters = new ComboBox();
             buttonLpt3Assign = new Button();
             panelApplication = new Panel();
+            lblXmem = new Label();
+            cbXmem = new ComboBox();
+            checkBoxAppMouseOn = new CheckBox();
             labelScaleValue = new Label();
             labelAppScale = new Label();
             hScrollBarScale = new HScrollBar();
@@ -87,7 +90,6 @@ namespace vDosConfig.Forms
             buttonOK = new Button();
             buttonCancel = new Button();
             openFileDialog1 = new OpenFileDialog();
-            checkBoxAppMouseOn = new CheckBox();
             panelHeader.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBoxVDosLogo).BeginInit();
             panelButtons.SuspendLayout();
@@ -107,7 +109,7 @@ namespace vDosConfig.Forms
             panelHeader.Dock = DockStyle.Top;
             panelHeader.Location = new Point(0, 0);
             panelHeader.Name = "panelHeader";
-            panelHeader.Size = new Size(1087, 96);
+            panelHeader.Size = new Size(1196, 96);
             panelHeader.TabIndex = 0;
             // 
             // labelHeaderTitle
@@ -139,17 +141,17 @@ namespace vDosConfig.Forms
             panelButtons.Dock = DockStyle.Fill;
             panelButtons.Location = new Point(0, 96);
             panelButtons.Name = "panelButtons";
-            panelButtons.Size = new Size(1087, 586);
+            panelButtons.Size = new Size(1196, 586);
             panelButtons.TabIndex = 1;
             // 
             // tableLayoutPanelLptPorts
             // 
             tableLayoutPanelLptPorts.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             tableLayoutPanelLptPorts.ColumnCount = 4;
-            tableLayoutPanelLptPorts.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-            tableLayoutPanelLptPorts.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-            tableLayoutPanelLptPorts.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-            tableLayoutPanelLptPorts.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            tableLayoutPanelLptPorts.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 23.5945854F));
+            tableLayoutPanelLptPorts.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 23.12269F));
+            tableLayoutPanelLptPorts.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 23.12269F));
+            tableLayoutPanelLptPorts.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30.1600323F));
             tableLayoutPanelLptPorts.Controls.Add(panelLpt1, 0, 0);
             tableLayoutPanelLptPorts.Controls.Add(panelLpt2, 1, 0);
             tableLayoutPanelLptPorts.Controls.Add(panelLpt3, 2, 0);
@@ -158,7 +160,7 @@ namespace vDosConfig.Forms
             tableLayoutPanelLptPorts.Name = "tableLayoutPanelLptPorts";
             tableLayoutPanelLptPorts.RowCount = 1;
             tableLayoutPanelLptPorts.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanelLptPorts.Size = new Size(1040, 444);
+            tableLayoutPanelLptPorts.Size = new Size(1149, 467);
             tableLayoutPanelLptPorts.TabIndex = 0;
             // 
             // panelLpt1
@@ -180,7 +182,7 @@ namespace vDosConfig.Forms
             panelLpt1.Dock = DockStyle.Fill;
             panelLpt1.Location = new Point(3, 3);
             panelLpt1.Name = "panelLpt1";
-            panelLpt1.Size = new Size(254, 438);
+            panelLpt1.Size = new Size(265, 461);
             panelLpt1.TabIndex = 0;
             // 
             // labelLpt1WindowsPorts
@@ -203,7 +205,7 @@ namespace vDosConfig.Forms
             comboBoxLpt1WindowsPort.FormattingEnabled = true;
             comboBoxLpt1WindowsPort.Location = new Point(20, 307);
             comboBoxLpt1WindowsPort.Name = "comboBoxLpt1WindowsPort";
-            comboBoxLpt1WindowsPort.Size = new Size(216, 28);
+            comboBoxLpt1WindowsPort.Size = new Size(227, 28);
             comboBoxLpt1WindowsPort.TabIndex = 5;
             // 
             // labelLpt1
@@ -238,7 +240,7 @@ namespace vDosConfig.Forms
             comboBoxLpt1PrinterType.Items.AddRange(new object[] { "None", "TCP/IP", "Windows Printer", "Windows Port" });
             comboBoxLpt1PrinterType.Location = new Point(20, 86);
             comboBoxLpt1PrinterType.Name = "comboBoxLpt1PrinterType";
-            comboBoxLpt1PrinterType.Size = new Size(216, 28);
+            comboBoxLpt1PrinterType.Size = new Size(227, 28);
             comboBoxLpt1PrinterType.TabIndex = 1;
             comboBoxLpt1PrinterType.SelectedIndexChanged += comboBoxLpt1PrinterType_SelectedIndexChanged;
             // 
@@ -276,7 +278,7 @@ namespace vDosConfig.Forms
             // 
             textBoxLpt1Port.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             textBoxLpt1Port.Font = new Font("Segoe UI", 11F);
-            textBoxLpt1Port.Location = new Point(179, 158);
+            textBoxLpt1Port.Location = new Point(190, 158);
             textBoxLpt1Port.Name = "textBoxLpt1Port";
             textBoxLpt1Port.Size = new Size(56, 27);
             textBoxLpt1Port.TabIndex = 3;
@@ -301,7 +303,7 @@ namespace vDosConfig.Forms
             comboBoxLpt1WindowsPrinters.FormattingEnabled = true;
             comboBoxLpt1WindowsPrinters.Location = new Point(20, 233);
             comboBoxLpt1WindowsPrinters.Name = "comboBoxLpt1WindowsPrinters";
-            comboBoxLpt1WindowsPrinters.Size = new Size(216, 28);
+            comboBoxLpt1WindowsPrinters.Size = new Size(227, 28);
             comboBoxLpt1WindowsPrinters.TabIndex = 4;
             // 
             // buttonLpt1Assign
@@ -314,9 +316,9 @@ namespace vDosConfig.Forms
             buttonLpt1Assign.FlatStyle = FlatStyle.Flat;
             buttonLpt1Assign.Font = new Font("Segoe UI", 10F);
             buttonLpt1Assign.ForeColor = Color.White;
-            buttonLpt1Assign.Location = new Point(19, 387);
+            buttonLpt1Assign.Location = new Point(19, 410);
             buttonLpt1Assign.Name = "buttonLpt1Assign";
-            buttonLpt1Assign.Size = new Size(215, 36);
+            buttonLpt1Assign.Size = new Size(226, 36);
             buttonLpt1Assign.TabIndex = 6;
             buttonLpt1Assign.Text = "Assign LPT1";
             buttonLpt1Assign.UseVisualStyleBackColor = false;
@@ -339,9 +341,9 @@ namespace vDosConfig.Forms
             panelLpt2.Controls.Add(comboBoxLpt2WindowsPrinters);
             panelLpt2.Controls.Add(buttonLpt2Assign);
             panelLpt2.Dock = DockStyle.Fill;
-            panelLpt2.Location = new Point(263, 3);
+            panelLpt2.Location = new Point(274, 3);
             panelLpt2.Name = "panelLpt2";
-            panelLpt2.Size = new Size(254, 438);
+            panelLpt2.Size = new Size(259, 461);
             panelLpt2.TabIndex = 1;
             // 
             // labelLpt2WindowsPort
@@ -364,7 +366,7 @@ namespace vDosConfig.Forms
             comboBoxLpt2WindowsPort.FormattingEnabled = true;
             comboBoxLpt2WindowsPort.Location = new Point(17, 307);
             comboBoxLpt2WindowsPort.Name = "comboBoxLpt2WindowsPort";
-            comboBoxLpt2WindowsPort.Size = new Size(219, 28);
+            comboBoxLpt2WindowsPort.Size = new Size(224, 28);
             comboBoxLpt2WindowsPort.TabIndex = 11;
             // 
             // labelLpt2
@@ -399,7 +401,7 @@ namespace vDosConfig.Forms
             comboBoxLpt2PrinterType.Items.AddRange(new object[] { "None", "TCP/IP", "Windows Printer", "Windows Port" });
             comboBoxLpt2PrinterType.Location = new Point(20, 86);
             comboBoxLpt2PrinterType.Name = "comboBoxLpt2PrinterType";
-            comboBoxLpt2PrinterType.Size = new Size(216, 28);
+            comboBoxLpt2PrinterType.Size = new Size(221, 28);
             comboBoxLpt2PrinterType.TabIndex = 7;
             comboBoxLpt2PrinterType.SelectedIndexChanged += comboBoxLpt2PrinterType_SelectedIndexChanged;
             // 
@@ -437,7 +439,7 @@ namespace vDosConfig.Forms
             // 
             textBoxLpt2Port.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             textBoxLpt2Port.Font = new Font("Segoe UI", 11F);
-            textBoxLpt2Port.Location = new Point(178, 158);
+            textBoxLpt2Port.Location = new Point(183, 158);
             textBoxLpt2Port.Name = "textBoxLpt2Port";
             textBoxLpt2Port.Size = new Size(57, 27);
             textBoxLpt2Port.TabIndex = 9;
@@ -462,7 +464,7 @@ namespace vDosConfig.Forms
             comboBoxLpt2WindowsPrinters.FormattingEnabled = true;
             comboBoxLpt2WindowsPrinters.Location = new Point(20, 233);
             comboBoxLpt2WindowsPrinters.Name = "comboBoxLpt2WindowsPrinters";
-            comboBoxLpt2WindowsPrinters.Size = new Size(216, 28);
+            comboBoxLpt2WindowsPrinters.Size = new Size(221, 28);
             comboBoxLpt2WindowsPrinters.TabIndex = 10;
             // 
             // buttonLpt2Assign
@@ -475,9 +477,9 @@ namespace vDosConfig.Forms
             buttonLpt2Assign.FlatStyle = FlatStyle.Flat;
             buttonLpt2Assign.Font = new Font("Segoe UI", 10F);
             buttonLpt2Assign.ForeColor = Color.White;
-            buttonLpt2Assign.Location = new Point(16, 387);
+            buttonLpt2Assign.Location = new Point(16, 410);
             buttonLpt2Assign.Name = "buttonLpt2Assign";
-            buttonLpt2Assign.Size = new Size(219, 36);
+            buttonLpt2Assign.Size = new Size(224, 36);
             buttonLpt2Assign.TabIndex = 12;
             buttonLpt2Assign.Text = "Assign LPT2";
             buttonLpt2Assign.UseVisualStyleBackColor = false;
@@ -500,9 +502,9 @@ namespace vDosConfig.Forms
             panelLpt3.Controls.Add(comboBoxLpt3WindowsPrinters);
             panelLpt3.Controls.Add(buttonLpt3Assign);
             panelLpt3.Dock = DockStyle.Fill;
-            panelLpt3.Location = new Point(523, 3);
+            panelLpt3.Location = new Point(539, 3);
             panelLpt3.Name = "panelLpt3";
-            panelLpt3.Size = new Size(254, 438);
+            panelLpt3.Size = new Size(259, 461);
             panelLpt3.TabIndex = 2;
             // 
             // labelLpt3WindowsPort
@@ -525,7 +527,7 @@ namespace vDosConfig.Forms
             comboBoxLpt3WindowsPort.FormattingEnabled = true;
             comboBoxLpt3WindowsPort.Location = new Point(20, 307);
             comboBoxLpt3WindowsPort.Name = "comboBoxLpt3WindowsPort";
-            comboBoxLpt3WindowsPort.Size = new Size(215, 28);
+            comboBoxLpt3WindowsPort.Size = new Size(220, 28);
             comboBoxLpt3WindowsPort.TabIndex = 17;
             // 
             // labelLpt3
@@ -560,7 +562,7 @@ namespace vDosConfig.Forms
             comboBoxLpt3PrinterType.Items.AddRange(new object[] { "None", "TCP/IP", "Windows Printer", "Windows Port" });
             comboBoxLpt3PrinterType.Location = new Point(20, 86);
             comboBoxLpt3PrinterType.Name = "comboBoxLpt3PrinterType";
-            comboBoxLpt3PrinterType.Size = new Size(215, 28);
+            comboBoxLpt3PrinterType.Size = new Size(220, 28);
             comboBoxLpt3PrinterType.TabIndex = 13;
             comboBoxLpt3PrinterType.SelectedIndexChanged += comboBoxLpt3PrinterType_SelectedIndexChanged;
             // 
@@ -622,7 +624,7 @@ namespace vDosConfig.Forms
             comboBoxLpt3WindowsPrinters.FormattingEnabled = true;
             comboBoxLpt3WindowsPrinters.Location = new Point(20, 233);
             comboBoxLpt3WindowsPrinters.Name = "comboBoxLpt3WindowsPrinters";
-            comboBoxLpt3WindowsPrinters.Size = new Size(215, 28);
+            comboBoxLpt3WindowsPrinters.Size = new Size(220, 28);
             comboBoxLpt3WindowsPrinters.TabIndex = 16;
             // 
             // buttonLpt3Assign
@@ -635,9 +637,9 @@ namespace vDosConfig.Forms
             buttonLpt3Assign.FlatStyle = FlatStyle.Flat;
             buttonLpt3Assign.Font = new Font("Segoe UI", 10F);
             buttonLpt3Assign.ForeColor = Color.White;
-            buttonLpt3Assign.Location = new Point(19, 387);
+            buttonLpt3Assign.Location = new Point(19, 410);
             buttonLpt3Assign.Name = "buttonLpt3Assign";
-            buttonLpt3Assign.Size = new Size(214, 36);
+            buttonLpt3Assign.Size = new Size(219, 36);
             buttonLpt3Assign.TabIndex = 18;
             buttonLpt3Assign.Text = "Assign LPT3";
             buttonLpt3Assign.UseVisualStyleBackColor = false;
@@ -647,6 +649,8 @@ namespace vDosConfig.Forms
             // 
             panelApplication.BackColor = Color.FromArgb(45, 45, 45);
             panelApplication.BorderStyle = BorderStyle.FixedSingle;
+            panelApplication.Controls.Add(lblXmem);
+            panelApplication.Controls.Add(cbXmem);
             panelApplication.Controls.Add(checkBoxAppMouseOn);
             panelApplication.Controls.Add(labelScaleValue);
             panelApplication.Controls.Add(labelAppScale);
@@ -659,11 +663,44 @@ namespace vDosConfig.Forms
             panelApplication.Controls.Add(labelTargetPath);
             panelApplication.Controls.Add(labelApplication);
             panelApplication.Dock = DockStyle.Fill;
-            panelApplication.Location = new Point(783, 2);
+            panelApplication.Location = new Point(804, 2);
             panelApplication.Margin = new Padding(3, 2, 3, 2);
             panelApplication.Name = "panelApplication";
-            panelApplication.Size = new Size(254, 440);
+            panelApplication.Size = new Size(342, 463);
             panelApplication.TabIndex = 3;
+            //
+            // lblXmem
+            //
+            lblXmem.AutoSize = true;
+            lblXmem.Font = new Font("Segoe UI", 11F);
+            lblXmem.ForeColor = Color.White;
+            lblXmem.Location = new Point(27, 348);
+            lblXmem.Name = "lblXmem";
+            lblXmem.Size = new Size(217, 20);
+            lblXmem.TabIndex = 27;
+            lblXmem.Text = "XMEM - Dos Extended Memory";
+            //
+            // cbXmem
+            //
+            cbXmem.DropDownStyle = ComboBoxStyle.DropDownList;
+            cbXmem.FormattingEnabled = true;
+            cbXmem.Location = new Point(17, 375);
+            cbXmem.Name = "cbXmem";
+            cbXmem.Size = new Size(308, 23);
+            cbXmem.TabIndex = 26;
+            //
+            // checkBoxAppMouseOn
+            //
+            checkBoxAppMouseOn.AutoSize = true;
+            checkBoxAppMouseOn.Font = new Font("Segoe UI", 11F);
+            checkBoxAppMouseOn.ForeColor = Color.White;
+            checkBoxAppMouseOn.Location = new Point(200, 208);
+            checkBoxAppMouseOn.Margin = new Padding(3, 2, 3, 2);
+            checkBoxAppMouseOn.Name = "checkBoxAppMouseOn";
+            checkBoxAppMouseOn.Size = new Size(121, 24);
+            checkBoxAppMouseOn.TabIndex = 25;
+            checkBoxAppMouseOn.Text = "Enable Mouse";
+            checkBoxAppMouseOn.UseVisualStyleBackColor = true;
             // 
             // labelScaleValue
             // 
@@ -682,7 +719,7 @@ namespace vDosConfig.Forms
             labelAppScale.AutoSize = true;
             labelAppScale.Font = new Font("Segoe UI", 10F);
             labelAppScale.ForeColor = Color.White;
-            labelAppScale.Location = new Point(27, 281);
+            labelAppScale.Location = new Point(27, 282);
             labelAppScale.Name = "labelAppScale";
             labelAppScale.Size = new Size(118, 19);
             labelAppScale.TabIndex = 15;
@@ -692,11 +729,11 @@ namespace vDosConfig.Forms
             // 
             hScrollBarScale.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             hScrollBarScale.LargeChange = 5;
-            hScrollBarScale.Location = new Point(19, 308);
+            hScrollBarScale.Location = new Point(20, 308);
             hScrollBarScale.Maximum = 54;
             hScrollBarScale.Minimum = 5;
             hScrollBarScale.Name = "hScrollBarScale";
-            hScrollBarScale.Size = new Size(217, 28);
+            hScrollBarScale.Size = new Size(305, 28);
             hScrollBarScale.TabIndex = 23;
             hScrollBarScale.TabStop = true;
             hScrollBarScale.Value = 15;
@@ -737,9 +774,9 @@ namespace vDosConfig.Forms
             buttonAssignTarget.FlatStyle = FlatStyle.Flat;
             buttonAssignTarget.Font = new Font("Segoe UI", 10F);
             buttonAssignTarget.ForeColor = Color.White;
-            buttonAssignTarget.Location = new Point(17, 388);
+            buttonAssignTarget.Location = new Point(17, 411);
             buttonAssignTarget.Name = "buttonAssignTarget";
-            buttonAssignTarget.Size = new Size(220, 36);
+            buttonAssignTarget.Size = new Size(308, 36);
             buttonAssignTarget.TabIndex = 24;
             buttonAssignTarget.Text = "Assign Target ";
             buttonAssignTarget.UseVisualStyleBackColor = false;
@@ -747,7 +784,6 @@ namespace vDosConfig.Forms
             // 
             // buttonFindTarget
             // 
-            buttonFindTarget.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             buttonFindTarget.BackColor = Color.FromArgb(60, 60, 60);
             buttonFindTarget.FlatAppearance.BorderSize = 0;
             buttonFindTarget.FlatAppearance.MouseDownBackColor = Color.RoyalBlue;
@@ -755,9 +791,9 @@ namespace vDosConfig.Forms
             buttonFindTarget.FlatStyle = FlatStyle.Flat;
             buttonFindTarget.Font = new Font("Segoe UI", 10F);
             buttonFindTarget.ForeColor = Color.White;
-            buttonFindTarget.Location = new Point(16, 158);
+            buttonFindTarget.Location = new Point(19, 154);
             buttonFindTarget.Name = "buttonFindTarget";
-            buttonFindTarget.Size = new Size(220, 36);
+            buttonFindTarget.Size = new Size(303, 36);
             buttonFindTarget.TabIndex = 20;
             buttonFindTarget.Text = "Find Application Target";
             buttonFindTarget.UseVisualStyleBackColor = false;
@@ -766,10 +802,10 @@ namespace vDosConfig.Forms
             // textBoxTargetpath
             // 
             textBoxTargetpath.Font = new Font("Segoe UI", 11F);
-            textBoxTargetpath.Location = new Point(19, 88);
+            textBoxTargetpath.Location = new Point(17, 84);
             textBoxTargetpath.Multiline = true;
             textBoxTargetpath.Name = "textBoxTargetpath";
-            textBoxTargetpath.Size = new Size(220, 63);
+            textBoxTargetpath.Size = new Size(302, 64);
             textBoxTargetpath.TabIndex = 19;
             // 
             // labelTargetPath
@@ -802,7 +838,7 @@ namespace vDosConfig.Forms
             tableLayoutPanelButtons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             tableLayoutPanelButtons.Controls.Add(buttonOK, 0, 0);
             tableLayoutPanelButtons.Controls.Add(buttonCancel, 1, 0);
-            tableLayoutPanelButtons.Location = new Point(753, 504);
+            tableLayoutPanelButtons.Location = new Point(862, 504);
             tableLayoutPanelButtons.Name = "tableLayoutPanelButtons";
             tableLayoutPanelButtons.RowCount = 1;
             tableLayoutPanelButtons.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
@@ -851,25 +887,12 @@ namespace vDosConfig.Forms
             // 
             openFileDialog1.FileName = "openFileDialog1";
             // 
-            // checkBoxAppMouseOn
-            // 
-            checkBoxAppMouseOn.AutoSize = true;
-            checkBoxAppMouseOn.Font = new Font("Segoe UI", 11F);
-            checkBoxAppMouseOn.ForeColor = Color.White;
-            checkBoxAppMouseOn.Location = new Point(19, 352);
-            checkBoxAppMouseOn.Margin = new Padding(3, 2, 3, 2);
-            checkBoxAppMouseOn.Name = "checkBoxAppMouseOn";
-            checkBoxAppMouseOn.Size = new Size(121, 24);
-            checkBoxAppMouseOn.TabIndex = 25;
-            checkBoxAppMouseOn.Text = "Enable Mouse";
-            checkBoxAppMouseOn.UseVisualStyleBackColor = true;
-            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(51, 51, 51);
-            ClientSize = new Size(1087, 682);
+            ClientSize = new Size(1196, 682);
             Controls.Add(panelButtons);
             Controls.Add(panelHeader);
             MinimumSize = new Size(900, 598);
@@ -966,6 +989,8 @@ namespace vDosConfig.Forms
         private HScrollBar hScrollBarScale;
         private Label labelScaleValue;
         private CheckBox checkBoxAppMouseOn;
+        private Label lblXmem;
+        private ComboBox cbXmem;
     }
 }
 

@@ -8,6 +8,9 @@ namespace vDosConfig.Forms
         private const int MinDosWindowSize = 5;
         private const int MaxDosWindowSize = 50;
         private const int DefaultDosWindowSize = 15;
+        private const int DefaultXmemMb = 16;
+        private const string DefaultXmemOption = "vDos default";
+        private static readonly int[] XmemMbOptions = { 4, 8, 16, 32, 64 };
         private static readonly Color MutedPlum = Color.FromArgb(112, 82, 112);
         private static readonly JsonSerializerOptions SettingsJsonOptions = new() { WriteIndented = true };
         private static readonly string SettingsFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "vDos 2026");
@@ -29,11 +32,13 @@ namespace vDosConfig.Forms
             LoadWindowsPorts();
 
             ConfigureApplicationTargetPicker();
+            ConfigureXmemPicker();
 
             checkBoxDosX.Checked = false;
             checkBoxFoxPro.Checked = false;
             checkBoxAppMouseOn.Checked = false;
             SetDosWindowSize(DefaultDosWindowSize);
+            SetXmem(DefaultXmemMb);
 
             comboBoxLpt1PrinterType.SelectedItem = "None";
             comboBoxLpt2PrinterType.SelectedItem = "None";
@@ -129,6 +134,7 @@ namespace vDosConfig.Forms
                 EnableFoxPro = checkBoxFoxPro.Checked,
                 MouseEnabled = checkBoxAppMouseOn.Checked,
                 DosWindowSize = hScrollBarScale.Value,
+                XmemMb = GetSelectedXmemMb(),
                 LptDestinations = new[]
                 {
                     (_lptAssignments[0] ?? LptAssignment.Dummy(1)).Destination,
@@ -144,6 +150,7 @@ namespace vDosConfig.Forms
             checkBoxFoxPro.Checked = settings.EnableFoxPro;
             checkBoxAppMouseOn.Checked = settings.MouseEnabled;
             SetDosWindowSize(settings.DosWindowSize <= 0 ? DefaultDosWindowSize : settings.DosWindowSize);
+            SetXmem(settings.XmemMb <= 0 ? DefaultXmemMb : settings.XmemMb);
 
             for (var index = 0; index < Math.Min(settings.LptDestinations.Length, 3); index++)
             {
@@ -176,6 +183,8 @@ namespace vDosConfig.Forms
                         ApplyLoadedDosWindowSize(line);
                     else if (line.StartsWith("MOUSE", StringComparison.OrdinalIgnoreCase))
                         ApplyLoadedMouseSetting(line);
+                    else if (line.StartsWith("XMEM", StringComparison.OrdinalIgnoreCase))
+                        ApplyLoadedXmemSetting(line);
 
                     continue;
                 }
@@ -217,12 +226,62 @@ namespace vDosConfig.Forms
             checkBoxAppMouseOn.Checked = value.Equals("ON", StringComparison.OrdinalIgnoreCase);
         }
 
+        private void ApplyLoadedXmemSetting(string line)
+        {
+            var equalsIndex = line.IndexOf('=');
+            if (equalsIndex < 0)
+                return;
+
+            var valueParts = line[(equalsIndex + 1)..]
+                .Trim()
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            if (valueParts.Length > 0 && int.TryParse(valueParts[0], out var xmemMb))
+                SetXmem(xmemMb);
+        }
+
         private void SetDosWindowSize(int value)
         {
             var clampedValue = Math.Clamp(value, MinDosWindowSize, MaxDosWindowSize);
             hScrollBarScale.Value = clampedValue;
             labelScaleValue.Text = clampedValue.ToString();
         }
+
+        private void ConfigureXmemPicker()
+        {
+            cbXmem.DropDownStyle = ComboBoxStyle.DropDownList;
+            cbXmem.Items.Clear();
+            cbXmem.Items.Add(DefaultXmemOption);
+            foreach (var xmemMb in XmemMbOptions)
+                cbXmem.Items.Add(FormatXmemOption(xmemMb));
+        }
+
+        private void SetXmem(int xmemMb)
+        {
+            if (xmemMb == 0)
+            {
+                cbXmem.SelectedItem = DefaultXmemOption;
+                return;
+            }
+
+            if (!XmemMbOptions.Contains(xmemMb))
+                xmemMb = DefaultXmemMb;
+
+            cbXmem.SelectedItem = FormatXmemOption(xmemMb);
+        }
+
+        private int GetSelectedXmemMb()
+        {
+            var selectedText = cbXmem.SelectedItem?.ToString() ?? cbXmem.Text;
+            if (selectedText.Equals(DefaultXmemOption, StringComparison.OrdinalIgnoreCase))
+                return 0;
+
+            var firstPart = selectedText.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+
+            return int.TryParse(firstPart, out var xmemMb) ? xmemMb : DefaultXmemMb;
+        }
+
+        private static string FormatXmemOption(int xmemMb) => $"{xmemMb} MB XMS";
 
         private void hScrollBarScale_ValueChanged(object? sender, EventArgs e)
         {
@@ -891,15 +950,22 @@ namespace vDosConfig.Forms
             var lpt1 = _lptAssignments[0] ?? LptAssignment.Dummy(1);
             var lpt2 = _lptAssignments[1] ?? LptAssignment.Dummy(2);
             var lpt3 = _lptAssignments[2] ?? LptAssignment.Dummy(3);
-
-            return string.Join(Environment.NewLine, new[]
+            var lines = new List<string>
             {
                 "rem vDos 2026 configuration file.",
                 "rem This file was written by vDos Configurator.",
                 "rem Changes made here may be replaced the next time the configurator writes settings.",
                 "",
                 "FRAME = ON",
-                $"WINDOW = {hScrollBarScale.Value}",
+                $"WINDOW = {hScrollBarScale.Value}"
+            };
+
+            var xmemMb = GetSelectedXmemMb();
+            if (xmemMb > 0)
+                lines.Add($"XMEM = {xmemMb} XMS");
+
+            lines.AddRange(new[]
+            {
                 $"MOUSE = {(checkBoxAppMouseOn.Checked ? "ON" : "OFF")}",
                 "",
                 "REM Printing",
@@ -909,6 +975,8 @@ namespace vDosConfig.Forms
                 lpt3.ToConfigLine(),
                 ""
             });
+
+            return string.Join(Environment.NewLine, lines);
         }
 
         private static string BuildAutoexecText(ApplicationTarget target)
@@ -964,6 +1032,7 @@ namespace vDosConfig.Forms
             public bool EnableFoxPro { get; set; }
             public bool MouseEnabled { get; set; }
             public int DosWindowSize { get; set; } = DefaultDosWindowSize;
+            public int XmemMb { get; set; } = DefaultXmemMb;
             public string[] LptDestinations { get; set; } = { "DUMMY", "DUMMY", "DUMMY" };
         }
 
