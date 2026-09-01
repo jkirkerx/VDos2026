@@ -20,6 +20,11 @@
 /vDosPrintMonitor/obj/
 /vDosPrintMonitor/publish/
 
+# .NET configurator build outputs
+/vDosConfig/bin/
+/vDosConfig/obj/
+/vDosConfig/publish/
+
 # vDos runtime dependency folder: keep SDL.dll only
 /VDosApp/bin/**
 !/VDosApp/bin/

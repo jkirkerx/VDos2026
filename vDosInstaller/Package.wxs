@@ -1,6 +1,6 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
-  <Package Name="vDos 2026" Manufacturer="vDos 2026" Version="1.0.0.0" UpgradeCode="8B6D6614-B0D3-4D3D-B660-4911C5E5E601" Scope="perMachine">
-    <MajorUpgrade DowngradeErrorMessage="A newer version of vDos 2026 is already installed." />
+  <Package Name="vDos 2026" Manufacturer="vDos 2026" Version="1.0.1.0" UpgradeCode="8B6D6614-B0D3-4D3D-B660-4911C5E5E601" Scope="perMachine">
+    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of vDos 2026 is already installed." />
     <MediaTemplate EmbedCab="yes" />
     <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLFOLDER]" After="CostFinalize" Sequence="both" />
     <Icon Id="VDosIcon" SourceFile="$(var.VDosIconPath)" />

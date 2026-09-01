@@ -16,8 +16,8 @@
   </ItemGroup>
   <Target Name="BuildInputs">
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\vDos.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Build" />
-    <MSBuild Projects="$(MSBuildThisFileDirectory)..\vDosPrintMonitor\vDosPrintMonitor.csproj" Properties="Configuration=$(Configuration);RuntimeIdentifier=win-x86;SelfContained=true;PublishSingleFile=true;IncludeNativeLibrariesForSelfExtract=true;EnableCompressionInSingleFile=true;PublishDir=$(MonitorOutputDir)\" Targets="Restore;Publish" />
-    <MSBuild Projects="$(MSBuildThisFileDirectory)..\vDosConfig\vDosConfig.csproj" Properties="Configuration=$(Configuration);RuntimeIdentifier=win-x86;SelfContained=true;PublishSingleFile=true;IncludeNativeLibrariesForSelfExtract=true;EnableCompressionInSingleFile=true;PublishDir=$(ConfigOutputDir)\" Targets="Restore;Publish" />
+    <Exec Command="dotnet publish &quot;$(MSBuildThisFileDirectory)..\vDosPrintMonitor\vDosPrintMonitor.csproj&quot; -c $(Configuration) -r win-x86 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:PublishDir=&quot;$(MonitorOutputDir)\&quot;" />
+    <Exec Command="dotnet publish &quot;$(MSBuildThisFileDirectory)..\vDosConfig\vDosConfig.csproj&quot; -c $(Configuration) -r win-x86 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:PublishDir=&quot;$(ConfigOutputDir)\&quot;" />
   </Target>
   <Target Name="Build" DependsOnTargets="BuildInputs">
     <MakeDir Directories="$(MSBuildThisFileDirectory)$(OutputPath);$(MSBuildThisFileDirectory)$(IntermediateOutputPath)" />
