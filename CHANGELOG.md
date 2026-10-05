@@ -1,6 +1,6 @@
 # Change notes
 
-## 2026-10-05 - Protected-mode memory handling
+## 2026.10.05 (2026-10-05) - Protected-mode memory handling
 
 This version brings cached address translation closer to Intel 386 paging
 behavior, addressing a confirmed emulation defect found while investigating

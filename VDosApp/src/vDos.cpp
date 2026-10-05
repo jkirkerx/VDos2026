@@ -11,7 +11,7 @@
 #include "vga.h"
 #include "paging.h"
 
-char vDosVersion[] = "2026.09.04";
+char vDosVersion[] = "2026.10.05";
 
 // The whole load of startups for all the subfunctions
 void GUI_StartUp();
