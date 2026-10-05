@@ -2,6 +2,7 @@
 #define vDOS_DOS_SYSTEM_H
 
 #include <vector>
+#include <stdio.h>
 #include "vDos.h"
 #include "support.h"
 #include "mem.h"
@@ -125,6 +126,10 @@ private:
 
 enum {OPEN_READ = 0, OPEN_WRITE = 1, OPEN_READWRITE = 2, DOS_NOT_INHERIT = 128};
 enum {DOS_SEEK_SET = 0, DOS_SEEK_CUR = 1, DOS_SEEK_END = 2};
+
+// Writes recent host-file and record-lock activity collected by drives.cpp.
+// The trace stays in memory unless crash diagnostics request it.
+void DOS_WriteFileTrace(FILE* traceFile);
 
 
 /*

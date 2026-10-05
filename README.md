@@ -31,6 +31,7 @@ This vDos 2026 fork is maintained by [Jim Kirker](https://jkirkerx.com). The cur
 - `vDos.vcxproj.filters` - Visual Studio file grouping for the C++ project.
 - `COPYING` - Original license file.
 - `README.md` - This file.
+- [Project notes](PROJECT_NOTES.md) - Field incidents, diagnostic evidence, and follow-up work.
 - `.gitignore` - Keeps generated build output out of Git.
 
 ### `VDosApp/`
@@ -116,7 +117,18 @@ LPT2 = DUMMY
 
 When printing through the TCP or Windows printer queue paths, vDos writes status to `#LPT1.tcp.log`, `#LPT2.tcp.log`, or `#LPT3.tcp.log` beside `vDos.exe`. The included `vDosPrintMonitor` watches those log files and shows Windows notifications for sent or failed jobs.
 
-## Build Notes
+## Memory Compatibility Changes
+
+The current version makes protected-mode address translation behave more like a
+386: every CR3 reload flushes cached mappings, paging-state changes invalidate
+caches, and accesses spanning 4 KB pages translate both pages correctly. It also
+implements cache invalidation for the later x86 INVLPG instruction and adds guest
+page-fault delivery and detailed exit diagnostics.
+
+See [change notes](CHANGELOG.md) for behavior, compatibility limits, and validation.
+The intermittent production FoxPro/AccountMate crash remains under verification.
+
+## Building
 
 The project is currently set up for Visual Studio 2026:
 

@@ -57,6 +57,11 @@ static struct {
 #define BaseSS		core.base_ss
 
 static Bit32u fetchAddr = -1;														// Caching/prefetching gives a slight performance improvement
+
+void CPU_InvalidateFetchCache(void)												// Cached bytes are keyed by linear address; drop them when translations change
+	{
+	fetchAddr = -1;
+	}
 union {
 	Bit32u dword;
 	Bit16u word[2];

@@ -40,7 +40,16 @@ struct PagingBlock {
 	bool	enabled;
 };
 
-extern PagingBlock paging; 
+extern PagingBlock paging;
+
+// Thrown by LinToPhys2 (VDosApp/src/hardware/memory.cpp) after it has
+// redirected the guest CPU into its own interrupt-14 handler for a page not
+// marked present (see CPU_Exception/CPU_Interrupt in cpu.cpp). Unwinds out of
+// whatever guest instruction/DOS call was touching memory, back up to the
+// dispatch loop in RunPC() (VDosApp/src/vDos.cpp), which simply resumes at
+// the CS:EIP the guest handler was given. Carries no data; it is only a
+// stack-unwinding signal and should never escape RunPC() in normal operation.
+struct GuestPageFault { };
 
 __forceinline bool PAGING_Enabled(void)
 	{

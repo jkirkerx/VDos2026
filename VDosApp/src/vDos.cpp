@@ -11,7 +11,7 @@
 #include "vga.h"
 #include "paging.h"
 
-char vDosVersion[] = "2015.04.10";
+char vDosVersion[] = "2026.09.04";
 
 // The whole load of startups for all the subfunctions
 void GUI_StartUp();
@@ -81,11 +81,21 @@ void RunPC(void)
 					}
 				else if (mouse_event_type)
 					CPU_HW_Interrupt(0x74);											// Setup executing Int 74 (Mouse)
-			Bits ret = (*cpudecoder)();
-			if (ret < 0)
-				return;
-			if (ret > 0 && (*CallBack_Handlers[ret])())
-				return;
+			try
+				{
+				Bits ret = (*cpudecoder)();
+				if (ret < 0)
+					return;
+				if (ret > 0 && (*CallBack_Handlers[ret])())
+					return;
+				}
+			catch (GuestPageFault&)
+				{
+				// LinToPhys2 (memory.cpp) already redirected the guest CPU into
+				// its own interrupt-14 handler - CS:EIP/SS:ESP are already set
+				// to that handler's entry. Just loop back and keep decoding
+				// there instead of falling through to whatever code faulted.
+				}
 			}
 		GFX_Events();
 		Bit32u mSecsNew = GetTickCount();

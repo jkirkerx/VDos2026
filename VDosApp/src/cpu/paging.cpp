@@ -49,17 +49,24 @@ HostPt PageHandler::GetHostPt(PhysPt addr)
 
 void PAGING_SetDirBase(Bitu cr3)
 	{
+	// On a real 386 every MOV CR3 flushes the TLB, even when the value doesn't
+	// change. With no INVLPG on the 386, reloading CR3 is how an extender makes
+	// page-table edits take effect. Flushing only on a changed value left stale
+	// translations in use after Phar Lap remapped pages, so reads and writes
+	// went to whatever physical page the linear address USED to map to.
 	if (cr3 != 0 && paging.cr3 != cr3)												// Shoot me, Phar Lap is frequently switching between 0 and the previous set value
 		{
 		if (cr3&0xfff)
 			E_Exit("Page fault: CR3 not page aligned");
-		clearTLB();
 		paging.cr3 = cr3;
 		}
+	clearTLB();
 	}
 
 void PAGING_Enable(bool enabled)
 	{
+	if (paging.enabled != enabled)													// Translations cached before paging was switched off may be stale when it's back on
+		clearTLB();
 	paging.enabled = enabled;
 	}
 

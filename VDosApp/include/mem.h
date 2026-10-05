@@ -4,6 +4,7 @@
 #ifndef VDOS_H
 #include "vDos.h"
 #endif
+#include <stdio.h>
 
 typedef Bit32u PhysPt;
 typedef Bit32u LinPt;
@@ -33,6 +34,14 @@ void Mem_rStosb(LinPt address, Bit8u val, Bitu count);
 void Mem_rStos4b(LinPt address, Bit32u val, Bitu count);
 
 void clearTLB();
+void CPU_InvalidateFetchCache(void);
+void MEM_WriteExitDiagnostics();
+
+// Defined in ints/xms.cpp; declared here (rather than xms.h, which nothing
+// outside src/ints currently includes) so hardware/memory.cpp can call it
+// from WritePageFaultDiagnostics without adding a new cross-directory
+// include. See xms.cpp's XMS_Defrag for what this reports.
+void XMS_WriteDiagnostics(FILE* file);
 
 
 inline void Mem_rStosw(LinPt addr, Bit16u val, Bitu count)

@@ -22,13 +22,31 @@ static void DoString(STRING_OP type)
 	Bitu count = reg_ecx&add_mask;
 	if (count == 0)																	// Seems to occur sometimes (calculated CX)
 		return;																		// Also required for do...while handling single operations
+	// ECX's commit to the real register is deferred to commit_ecx/ecx_leftover
+	// below, set only after the switch completes without a page fault. A fault
+	// partway through a case's copy (Mem_rMovsb/Mem_rStosb etc. can now throw
+	// GuestPageFault - see memory.cpp) unwinds straight out of this function,
+	// skipping that commit, so ECX is left exactly where it started. Every
+	// case below already defers its ESI/EDI writeback the same way (to after
+	// its own loop/bulk copy finishes), so a fault leaves ECX, ESI and EDI
+	// all at their pre-instruction values together - safe to fully re-execute
+	// the whole REP-prefixed instruction from scratch once the guest's own
+	// fault handler has fixed the mapping and IRETs back. (LODS writes AL/AX/
+	// EAX per iteration rather than deferring it, so it can hold a stale
+	// intermediate value while a retry is in flight, same as real hardware;
+	// that value is not guest-visible until the instruction actually retires,
+	// and a full retry overwrites it with the correct final value. SCASx/
+	// CMPSx, type >= R_SCASB, already manage their own ECX this same
+	// deferred way and are unaffected.)
+	bool commit_ecx = false;
+	Bitu ecx_leftover = 0;
 	if (type < R_SCASB)																// Won't interrupt scas and cmps instruction since they can interrupt themselves
 		{																			// So they are also not limited to use cycles!
-		reg_ecx &= ~add_mask;
+		commit_ecx = true;
 		if (count > (Bitu)CPU_Cycles)												// Calculate amount of ops to do before cycles run out
 			if (count-(Bitu)CPU_Cycles > (Bitu)CPU_CycleMax/16)
 				{
-				reg_ecx |= (count-CPU_Cycles);
+				ecx_leftover = count-CPU_Cycles;
 				count = CPU_Cycles;
 				LOADIP;																// Reset IP to the start
 				}
@@ -408,4 +426,6 @@ static void DoString(STRING_OP type)
 		}
 		break;
 		}
+	if (commit_ecx)																	// Reached only if the switch above completed without a page fault
+		reg_ecx = (reg_ecx&~add_mask)|ecx_leftover;
 	}

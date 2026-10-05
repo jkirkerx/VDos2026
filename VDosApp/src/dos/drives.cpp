@@ -7,6 +7,45 @@
 #include <direct.h>
 #include <fcntl.h>
 
+#define FILE_TRACE_SIZE 128
+#define FILE_TRACE_TEXT 256
+
+struct FileTraceEntry
+	{
+	DWORD tick;
+	char text[FILE_TRACE_TEXT];
+	};
+
+static FileTraceEntry fileTrace[FILE_TRACE_SIZE];
+static unsigned int fileTraceNext;
+static unsigned int fileTraceCount;
+
+static void TraceFileEvent(const char* format, ...)
+	{
+	FileTraceEntry& entry = fileTrace[fileTraceNext];
+	entry.tick = GetTickCount();
+	va_list args;
+	va_start(args, format);
+	vsnprintf_s(entry.text, sizeof(entry.text), _TRUNCATE, format, args);
+	va_end(args);
+	fileTraceNext = (fileTraceNext+1)%FILE_TRACE_SIZE;
+	if (fileTraceCount < FILE_TRACE_SIZE)
+		fileTraceCount++;
+	}
+
+void DOS_WriteFileTrace(FILE* traceFile)
+	{
+	if (!traceFile)
+		return;
+	fprintf(traceFile, "Recent DOS/host file activity (oldest first, tick milliseconds):\n");
+	unsigned int first = (fileTraceNext+FILE_TRACE_SIZE-fileTraceCount)%FILE_TRACE_SIZE;
+	for (unsigned int i = 0; i < fileTraceCount; i++)
+		{
+		const FileTraceEntry& entry = fileTrace[(first+i)%FILE_TRACE_SIZE];
+		fprintf(traceFile, "  %10lu  %s\n", (unsigned long)entry.tick, entry.text);
+		}
+	}
+
 
 bool WildFileCmp(const char * file, const char * wild) 
 	{
@@ -128,9 +167,11 @@ bool DOS_Drive::FileCreate(DOS_File * * file, char * name, Bit16u attr/*attribut
 	int fd;
 	if(_sopen_s(&fd, strcat(strcpy(win_name, basedir), name), _O_CREAT | _O_TRUNC | _O_BINARY | _O_RDWR, _SH_DENYNO, _S_IREAD | _S_IWRITE))
 		{
+		TraceFileEvent("CREATE FAIL errno=%d path=%s", errno, win_name);
 		LOG_MSG("File creation failed: %s\nErrorno: %d", win_name, errno);
 		return false;
 		}
+	TraceFileEvent("CREATE OK fd=%d path=%s", fd, win_name);
 	// Make the 16 bit device information
 	*file = new Disk_File(name, fd);
 	(*file)->flags = OPEN_READWRITE;
@@ -173,7 +214,11 @@ bool DOS_Drive::FileOpen(DOS_File * * file, char * name, Bit32u flags)
 	char win_name[MAX_PATH_LEN];
 	int fd;
 	if(_sopen_s(&fd, strcat(strcpy(win_name, basedir), name), oflag | _O_BINARY, shflag, _S_IREAD | _S_IWRITE))
+		{
+		TraceFileEvent("OPEN FAIL errno=%d flags=%08X share=%d path=%s", errno, flags, shflag, win_name);
 		return false;
+		}
+	TraceFileEvent("OPEN OK fd=%d flags=%08X share=%d path=%s", fd, flags, shflag, win_name);
 	*file = new Disk_File(name, fd);
 	(*file)->flags = flags;															// For the inheritance flag and maybe check for others.
 	return true;
@@ -401,6 +446,7 @@ bool Disk_File::Read(Bit8u* data, Bit16u* size)
 		else if (tries)																// Should be region locked
 			Sleep(25);																// If failed, wait 25 millisecs
 	DOS_SetError((Bit16u)_doserrno);
+	TraceFileEvent("READ FAIL fd=%d errno=%d doserrno=%lu file=%s", fd, errno, (unsigned long)_doserrno, name ? name : "");
 	*size = 0;																		// Is this OK ??
 	return false;
 	}
@@ -424,6 +470,7 @@ bool Disk_File::Write(Bit8u* data, Bit16u* size)
 		else if (tries)																// This should be region locked? (not documented in MSDN)
 			Sleep(25);																// If failed, wait 25 millisecs
 	DOS_SetError((Bit16u)_doserrno);
+	TraceFileEvent("WRITE FAIL fd=%d errno=%d doserrno=%lu file=%s", fd, errno, (unsigned long)_doserrno, name ? name : "");
 	*size = 0;																		// Is this OK ??
 	return false;
 	}
@@ -440,10 +487,15 @@ bool Disk_File::LockFile(Bit8u mode, Bit32u pos, Bit32u size)
 	auto lockFunct = mode == 0 ? ::LockFile : ::UnlockFile;
 	for (int tries = 2; tries; tries--)												// Try twice
 		if ((bRet = lockFunct(hFile, pos, 0, size, 0)))
+			{
+			TraceFileEvent("%s OK fd=%d pos=%lu size=%lu file=%s", mode == 0 ? "LOCK" : "UNLOCK", fd, (unsigned long)pos, (unsigned long)size, name ? name : "");
 			return true;
+			}
 		else if (tries)
 			Sleep(25);																// If failed, wait 25 millisecs
-	switch (GetLastError())
+	DWORD lockError = GetLastError();
+	TraceFileEvent("%s FAIL fd=%d pos=%lu size=%lu winerr=%lu file=%s", mode == 0 ? "LOCK" : "UNLOCK", fd, (unsigned long)pos, (unsigned long)size, (unsigned long)lockError, name ? name : "");
+	switch (lockError)
 		{
 	case ERROR_ACCESS_DENIED:
 	case ERROR_LOCK_VIOLATION:
@@ -485,7 +537,10 @@ bool Disk_File::Seek(Bit32u* pos, Bit32u type)
 void Disk_File::Close()
 	{
 	if (refCtr == 1)																// Only close if one reference left
+		{
+		TraceFileEvent("CLOSE fd=%d file=%s", fd, name ? name : "");
 		_close(fd);
+		}
 	}
 
 Bit16u Disk_File::GetInformation(void)

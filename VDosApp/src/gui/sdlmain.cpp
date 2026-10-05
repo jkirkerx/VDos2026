@@ -1016,6 +1016,7 @@ void GFX_Events()
 						MessageBox(sdlHwnd, MSG_Get("UNSAFETOCLOSE2"), MSG_Get("UNSAFETOCLOSE1"), MB_OK | MB_ICONWARNING);
 						return;
 						}
+			MEM_WriteExitDiagnostics();
 			SDL_Quit();
 			exit(0);
 			break;
@@ -1251,6 +1252,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		SDL_EnableUNICODE(true);
 
 		vDos_Init();
+		MEM_WriteExitDiagnostics();
 		}
 	catch (char * error)
 		{

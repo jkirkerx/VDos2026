@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "vDos.h"
 #include "callback.h"
 #include "mem.h"
@@ -60,10 +61,70 @@ static bool InvalidXMSHandle(Bit16u handle)
 	return (!handle || (handle >= XMS_HANDLES) || xms_handles[handle].free);
 	}
 
+// Diagnostic trace of a locked XMS handle being relocated by XMS_Defrag below
+// despite being locked - see the comment on XMS_Defrag itself. A DOS extender
+// running in protected mode has to lock whatever XMS block holds its own page
+// directory/tables, because its CR3 and every page-table entry are physical
+// addresses baked into already-running CPU/page-table state; nothing updates
+// those if the block silently moves. This does not change Defrag's behavior,
+// it only records when this happens so a fault or exit log can show it
+// directly - see PROJECT_NOTES.md, 2026-09-15, for why this is suspected to
+// be the actual cause of the "table/directory entry not present" crashes,
+// rather than the extender genuinely never having mapped the page.
+static const unsigned int XMSRelocationTraceSize = 32;
+struct XMSRelocationEntry
+	{
+	Bit16u handle;
+	Bit32u oldAddr, newAddr;
+	Bit16u sizeKB;
+	Bit8u lockedCount;
+	};
+static XMSRelocationEntry xmsRelocationTrace[XMSRelocationTraceSize];
+static unsigned int xmsRelocationTraceNext = 0;
+static unsigned int xmsRelocationTraceCount = 0;				// Total ever recorded this run, not clamped to the ring size
+
+static void RecordXMSRelocation(Bit16u handle, Bit32u oldAddr, Bit32u newAddr, Bit16u sizeKB, Bit8u lockedCount)
+	{
+	XMSRelocationEntry& entry = xmsRelocationTrace[xmsRelocationTraceNext];
+	entry.handle = handle;
+	entry.oldAddr = oldAddr;
+	entry.newAddr = newAddr;
+	entry.sizeKB = sizeKB;
+	entry.lockedCount = lockedCount;
+	xmsRelocationTraceNext = (xmsRelocationTraceNext+1)%XMSRelocationTraceSize;
+	xmsRelocationTraceCount++;
+	}
+
+void XMS_WriteDiagnostics(FILE* file)
+	{
+	fprintf(file, "XMS handles in use (a locked handle should never move; Defrag below does not currently enforce that):\n");
+	for (Bitu i = 1; i < XMS_HANDLES; i++)
+		if (!xms_handles[i].free)
+			fprintf(file, "  handle=%u addr=%08X sizeKB=%u locked=%u\n",
+				(unsigned)i, xms_handles[i].addr, xms_handles[i].size, xms_handles[i].locked);
+	unsigned int shown = xmsRelocationTraceCount < XMSRelocationTraceSize ? xmsRelocationTraceCount : XMSRelocationTraceSize;
+	fprintf(file, "XMS locked-handle relocations this run: %u (most recent %u shown, oldest first):\n", xmsRelocationTraceCount, shown);
+	unsigned int first = (xmsRelocationTraceNext+XMSRelocationTraceSize-shown)%XMSRelocationTraceSize;
+	for (unsigned int i = 0; i < shown; i++)
+		{
+		const XMSRelocationEntry& entry = xmsRelocationTrace[(first+i)%XMSRelocationTraceSize];
+		fprintf(file, "  RELOCATED handle=%u oldAddr=%08X newAddr=%08X sizeKB=%u lockedCount=%u\n",
+			entry.handle, entry.oldAddr, entry.newAddr, entry.sizeKB, entry.lockedCount);
+		}
+	}
+
 // XMS_Defrag totally neglects memory blocks being blocked (unmovable)
 // And why shouldn't it, accessing these blocks directly isn't possible in real mode?
 // What with protected mode???
 // Don't move locked blocks and find make thing more complicated, largest free block, etc???
+//
+// 2026-09-15: that last question is the one this project is now chasing down.
+// A locked handle IS silently relocated below like any other - see
+// RecordXMSRelocation calls in the two compaction loops - which is suspected
+// to be the actual mechanism behind the "page fault: table/directory entry
+// not present" crashes (PROJECT_NOTES.md has the full reasoning). Left
+// unchanged for now pending confirmation from a live trace; only the
+// recording calls were added.
 Bit16u XMS_Defrag(Bit16u maxHandle)													// Defrag XMS memory, maximize specific handle (0 = n/a) and return free space in KB
 	{
 	Bit16u sortedHandles[XMS_HANDLES];
@@ -89,6 +150,8 @@ Bit16u XMS_Defrag(Bit16u maxHandle)													// Defrag XMS memory, maximize s
 		XMS_Handle * handlePtr = &xms_handles[sortedHandles[i]];
 		if (handlePtr->addr > lowAddr)
 			{
+			if (handlePtr->locked)
+				RecordXMSRelocation(sortedHandles[i], handlePtr->addr, lowAddr, handlePtr->size, handlePtr->locked);
 			memmove(MemBase+lowAddr, MemBase+handlePtr->addr, handlePtr->size*1024);
 			handlePtr->addr = lowAddr;
 			}
@@ -106,6 +169,8 @@ Bit16u XMS_Defrag(Bit16u maxHandle)													// Defrag XMS memory, maximize s
 			highAddr -= handlePtr->size*1024;
 			if (handlePtr->addr < highAddr)
 				{
+				if (handlePtr->locked)
+					RecordXMSRelocation(sortedHandles[i], handlePtr->addr, highAddr, handlePtr->size, handlePtr->locked);
 				memmove(MemBase+highAddr, MemBase+handlePtr->addr, handlePtr->size*1024);
 				handlePtr->addr = highAddr;
 				}

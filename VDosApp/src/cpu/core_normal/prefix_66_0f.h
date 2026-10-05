@@ -75,7 +75,7 @@
 					break;
 				case 0x07:										/* INVLPG */
 					if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
-//					PAGING_ClearTLB();
+					clearTLB();									// Whole TLB; a single-page flush isn't worth the bookkeeping
 					break;
 				}
 			} else {
