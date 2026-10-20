@@ -30,6 +30,7 @@ void MSG_Init()
 	MSG_Add("SYSMENU:DECREASE",		"Decrease font size\tWin+F11");
 	MSG_Add("SYSMENU:INCREASE",		"Increase font size\tWin+F12");
 	MSG_Add("SYSMENU:ABOUT",		"About...");
+	MSG_Add("SYSMENU:CONFIG",		"vDos Config...");
 
 	MSG_Add("FILE_NOT_FOUND",		"File not found\n");
 	MSG_Add("ILLEGAL_COMMAND",		"Bad command or file name\n");

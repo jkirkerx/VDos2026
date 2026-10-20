@@ -1,166 +1,50 @@
 # vDos 2026
 
-vDos 2026 is a maintained Windows build of vDos focused on running legacy DOS business applications and making network printing practical for modern customer environments.
+vDos 2026 runs legacy DOS business applications on Windows. This repository contains the vDos C++ application source and its required SDL and FreeType dependencies, maintained by [Jim Kirker](https://jkirkerx.com).
 
-The original vDos project provided the DOS compatibility layer. Printing support was historically weak and inconsistent, especially for network printers. This fork keeps the vDos application working while improving the raw TCP printing path used by printers and print servers that accept direct port 9100-style jobs.
+## Buy the packaged edition
 
-## Why This Exists
+[Buy vDos 2026 on the Microsoft Store](https://apps.microsoft.com/detail/9N122DMJRSN8).
 
-This project exists because keeping legacy DOS business software alive on modern Windows should not require a decade of failed workarounds.
+The Store edition provides the packaged application and configuration interface. This source repository contains the vDos application; it does not include the installer, configurator, print monitor, or Windows notification helper projects.
 
-Over the years, solutions like VMware, DOSBox, and other compatibility layers were tested for real business use, especially around printing. They either failed outright, were too fragile, or could not reliably handle the kind of raw printer output that older DOS accounting and check-printing systems still depend on.
+## Latest memory fix: runaway REP string operations
 
-vDos 2026 is focused on the practical parts that matter in the field: launching the DOS application, preserving usable configuration files, supporting raw network printing, supporting direct LPT/COM device output, and packaging everything in an installer that can be deployed on customer machines.
+The October 8, 2026 fix addresses intermittent memory corruption and crashes observed while running FoxPro/AccountMate, including during memo entry, scrolling, and nested screens.
 
-Maintained by [Jim Kirker](https://jkirkerx.com), this fork is intended to save other people from having to rediscover the same fixes the hard way.
+The CPU execution loop decrements its cycle counter before executing an instruction, so the last instruction in a time slice can run with zero cycles remaining. The REP string-operation handler previously clamped its iteration count to that zero value. Its `do ... while (--count)` loops then underflowed the unsigned counter to `0xFFFFFFFF`, allowing a copy or fill to continue far beyond its intended buffer. Depending on direction and mappings, this could overwrite application data or page tables, fault on an unmapped page, or stall.
 
-## Support This Project
+In `VDosApp/src/cpu/core_normal/string.h`, the handler now uses at least one available cycle:
 
-If vDos 2026 saves you time or helps keep a legacy DOS application running, you can support ongoing maintenance through [GitHub Sponsors](https://github.com/sponsors/jkirkerx). Donations help cover testing time, packaging work, and continued compatibility fixes.
-
-## Maintainer Credit
-
-This vDos 2026 fork is maintained by [Jim Kirker](https://jkirkerx.com). The current work includes cleaning up the project structure, modernizing the Visual Studio/WiX build, packaging the installer, and making direct TCP network printing usable for real customer environments.
-
-## Repository Layout
-
-### Root Files
-
-- `vDos.sln` - Visual Studio 2026 solution file.
-- `vDos.vcxproj` - C++ project for the main vDos executable.
-- `vDos.vcxproj.filters` - Visual Studio file grouping for the C++ project.
-- `COPYING` - Original license file.
-- `README.md` - This file.
-- [Project notes](PROJECT_NOTES.md) - Field incidents, diagnostic evidence, and follow-up work.
-- `.gitignore` - Keeps generated build output out of Git.
-
-### `VDosApp/`
-
-Main vDos application source and required runtime assets.
-
-- `VDosApp/src/` - C++ source code for vDos.
-- `VDosApp/include/` - Header files used by the vDos C++ project.
-- `VDosApp/Embedded/` - Default `autoexec.txt` and `config.txt` files installed or copied beside the app.
-- `VDosApp/bin/SDL.dll` - Required SDL runtime DLL for vDos.
-- `VDosApp/SDL-1.2.15/` - SDL headers and x86 import libraries used by the build.
-- `VDosApp/ft255/` - FreeType library files used by the build.
-- `VDosApp/font/` - Font-related files used by vDos.
-
-### `vDosPrintMonitor/`
-
-Windows notification/helper application for vDos printing.
-
-This is a .NET 8 Windows project. The installer publishes it as a self-contained `win-x86` executable so customer machines do not need to install the .NET 8 runtime separately.
-
-Important files:
-
-- `vDosPrintMonitor/vDosPrintMonitor.csproj`
-- `vDosPrintMonitor/Program.cs`
-
-Generated folders such as `bin/`, `obj/`, and `publish/` are intentionally ignored by Git.
-
-### `vDosInstaller/`
-
-WiX installer project for vDos 2026.
-
-Important files:
-
-- `vDosInstaller/vDosInstaller.wixproj` - Builds the app, publishes the print monitor, and creates the MSI.
-- `vDosInstaller/Package.wxs` - WiX package definition.
-
-The installer includes:
-
-- `vDos.exe`
-- `SDL.dll`
-- default `autoexec.txt`
-- default `config.txt`
-- self-contained `vDosPrintMonitor.exe`
-- Start Menu/Desktop shortcuts
-- permissions allowing users to edit `autoexec.txt` and `config.txt`
-
-Installer build output under `vDosInstaller/bin/` and `vDosInstaller/obj/` is ignored by Git.
-
-## Printing
-
-vDos 2026 sends DOS `LPT` output as raw printer data. Configure printers in `config.txt` with one `LPTx = ...` entry per DOS printer port.
-
-Supported printer destinations:
-
-```text
-LPT1 = TCP 192.168.1.111:9100
-LPT2 = PRINTER "Windows printer queue name"
-LPT3 = PORT USB001
+```cpp
+Bits cyclesAvail = CPU_Cycles > 0 ? CPU_Cycles : 1;
 ```
 
-Destination formats:
+The clamp uses this positive value, and remaining work resumes through the existing instruction-restart path. This prevents a zero-count pass from entering those loops.
 
-- `TCP host:port` - sends raw data directly to a network printer or print server. Raw/JetDirect printing commonly uses port `9100`; some print servers expose multiple queues as `9100`, `9101`, and `9102`.
-- `PRINTER "queue name"` - sends raw data through an installed Windows printer queue.
-- `PORT port-name` - resolves the Windows printer queue using a Windows port name such as `USB001`, then sends raw data through that queue.
-- `DUMMY` - discards output for an unused DOS printer port.
+The project notes record an A/B test with the final REPSTALL reproducer: the pre-fix build stalled after approximately 13,000 REP operations, while the fixed Release build completed 300,000 operations with `OK`. These are recorded development results, not a claim that every production compatibility issue has been resolved.
 
-Default sample `config.txt` entries:
+Earlier paging corrections are also retained: CR3 reloads flush cached translations, paging-state changes invalidate caches, INVLPG invalidates translations, and accesses crossing 4 KB page boundaries translate both pages. Those fixes are separate from the REP counter-underflow bug.
 
-```text
-LPT1 = TCP 192.168.1.111:9100
-LPT2 = TCP 192.168.1.111:9101
-LPT3 = TCP 192.168.1.111:9102
-```
+## Build from source
 
-Replace the sample IP address and port numbers with the customer's printer or print-server values. Example alternatives:
-
-```text
-LPT1 = PRINTER "Lexmark MC3200 USB4"
-LPT1 = PORT USB004
-LPT2 = DUMMY
-```
-
-When printing through the TCP or Windows printer queue paths, vDos writes status to `#LPT1.tcp.log`, `#LPT2.tcp.log`, or `#LPT3.tcp.log` beside `vDos.exe`. The included `vDosPrintMonitor` watches those log files and shows Windows notifications for sent or failed jobs.
-
-## Memory Compatibility Changes
-
-The current version makes protected-mode address translation behave more like a
-386: every CR3 reload flushes cached mappings, paging-state changes invalidate
-caches, and accesses spanning 4 KB pages translate both pages correctly. It also
-implements cache invalidation for the later x86 INVLPG instruction and adds guest
-page-fault delivery and detailed exit diagnostics.
-
-See [change notes](CHANGELOG.md) for behavior, compatibility limits, and validation.
-The intermittent production FoxPro/AccountMate crash remains under verification.
-
-## Building
-
-The project is currently set up for Visual Studio 2026:
-
-- Platform toolset: `v145`
-- Platform: `Win32`
-- Main app output: `Debug/vDos.exe` or `Release/vDos.exe`
-- Installer output: `vDosInstaller/bin/Release/vDos2026.msi`
-
-Build the installer project to produce the full MSI package:
+Open `vDos.sln` in Visual Studio with the Desktop development with C++ workload, the v145 platform toolset, and Windows SDK 10.0.26100.0. Build **Release | Win32**, or run from a Visual Studio developer shell:
 
 ```powershell
-msbuild vDosInstaller\vDosInstaller.wixproj /p:Configuration=Release /p:Platform=Win32
+msbuild vDos.vcxproj /p:Configuration=Release /p:Platform=Win32
 ```
 
-The installer project will build `vDos.vcxproj`, publish `vDosPrintMonitor` as self-contained `win-x86`, and then run WiX.
+The executable is written to `Release/vDos.exe`. The project copies `SDL.dll` and the default `config.txt` and `autoexec.txt` into the output folder when needed. Review those configuration files and set the working directory and DOS application commands for your installation.
 
-## Git Notes
+## Source layout
 
-Generated build output is intentionally excluded from GitHub. This keeps the repository small and source-focused.
+- `VDosApp/src/` and `VDosApp/include/`: emulator source and headers.
+- `VDosApp/Embedded/`: default runtime configuration files.
+- `VDosApp/bin/SDL.dll`: SDL runtime.
+- `VDosApp/SDL-1.2.15/` and `VDosApp/ft255/`: bundled build dependencies.
+- `VDosApp/font/`: font resources.
+- `vDos.vcxproj`, `vDos.vcxproj.filters`, and `vDos.sln`: C++ build files.
 
-Ignored examples:
+## License
 
-- `Debug/`
-- `Release/`
-- `bin/`
-- `obj/`
-- `vDosInstaller/bin/`
-- `vDosInstaller/obj/`
-- `vDosPrintMonitor/bin/`
-- `vDosPrintMonitor/obj/`
-- `vDosPrintMonitor/publish/`
-- `.vs/`
-- `*.suo`, `*.pdb`, `*.obj`, `*.wixpdb`, `*.cab`
-
-The built MSI should be treated as a release artifact, not normal source code.
+See [COPYING](COPYING) for the GNU General Public License. Bundled dependencies retain their respective license notices.

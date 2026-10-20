@@ -11,7 +11,7 @@
 #include "vga.h"
 #include "paging.h"
 
-char vDosVersion[] = "2026.10.05";
+char vDosVersion[] = "2026.10.13.15";
 
 // The whole load of startups for all the subfunctions
 void GUI_StartUp();
@@ -310,7 +310,8 @@ void vDos_Init(void)
 	ConfAddBool("mouse", false);
 	ConfAddInt("lins", 25);
 	ConfAddInt("cols", 80);
-	ConfAddBool("frame", false);
+	ConfAddBool("frame", true);												// vDos 2026: framed by default (toolbar and vDos Config button)
+	ConfAddBool("toolbar", true);
 	ConfAddBool("timeout", true);
 	ConfAddString("font", "");
 	ConfAddString("wp", "");

@@ -43,11 +43,17 @@ static void DoString(STRING_OP type)
 	if (type < R_SCASB)																// Won't interrupt scas and cmps instruction since they can interrupt themselves
 		{																			// So they are also not limited to use cycles!
 		commit_ecx = true;
-		if (count > (Bitu)CPU_Cycles)												// Calculate amount of ops to do before cycles run out
-			if (count-(Bitu)CPU_Cycles > (Bitu)CPU_CycleMax/16)
+		// The core loop is while (CPU_Cycles-- > 0), so the last instruction of every slice runs with
+		// CPU_Cycles == 0 (and callbacks can leave it negative). Clamping count to CPU_Cycles there
+		// produced count == 0, which the do...while loops below cannot handle: --count wraps to
+		// 0xFFFFFFFF and the string op runs away through memory until it hits an unmapped page.
+		// Always leave at least one iteration for this pass; the rest is deferred via LOADIP.
+		Bits cyclesAvail = CPU_Cycles > 0 ? CPU_Cycles : 1;
+		if (count > (Bitu)cyclesAvail)												// Calculate amount of ops to do before cycles run out
+			if (count-(Bitu)cyclesAvail > (Bitu)CPU_CycleMax/16)
 				{
-				ecx_leftover = count-CPU_Cycles;
-				count = CPU_Cycles;
+				ecx_leftover = count-cyclesAvail;
+				count = cyclesAvail;
 				LOADIP;																// Reset IP to the start
 				}
 		CPU_Cycles -= count;

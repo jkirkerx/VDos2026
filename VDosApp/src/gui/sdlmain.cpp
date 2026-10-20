@@ -18,15 +18,17 @@
 #include "mem.h"
 #include "mouse.h"
 #include <Shellapi.h>
+#include "appdata.h"
 
 #define WM_SC_SYSMENUABOUT		0x1110												// Pretty arbitrary, just needs to be < 0xF000
 #define WM_SC_SYSMENUPCOPY		(WM_SC_SYSMENUABOUT + 1)
 #define WM_SC_SYSMENUPASTE		(WM_SC_SYSMENUABOUT + 2)
 #define WM_SC_SYSMENUDECREASE	(WM_SC_SYSMENUABOUT + 3)
 #define WM_SC_SYSMENUINCREASE	(WM_SC_SYSMENUABOUT + 4)
+#define WM_SC_SYSMENUCONFIG		(WM_SC_SYSMENUABOUT + 5)
 
-#define aboutWidth 400
-#define aboutHeight 160
+#define aboutWidth 600
+#define aboutHeight 230
 
 typedef struct {
 	Bit8u blue;
@@ -75,6 +77,20 @@ static WNDPROC fnSDLDefaultWndProc;
 
 static int fullLeftOff, fullTopOff;
 
+// vDos 2026 toolbar: a slim bar vDos draws itself above the DOS text screen (framed window, text mode only).
+// It never takes keyboard focus, so the DOS program keeps every key (FoxPro's Alt menus included).
+// TOOLBAR = OFF in config.txt turns it off.
+static bool toolbarOn = true;														// From config.txt
+static int toolbarH = 0;															// Height of the bar on the current surface (0 = not shown)
+static int toolbarHover = -1;														// Button under the mouse, -1 = none
+static int toolbarPressed = -1;														// Button the left mouse button went down on
+static bool toolbarTracking = false;												// TrackMouseEvent(TME_LEAVE) active
+static Bit8u dosMouseButtons = 0;													// Buttons pressed in the DOS area (bit 0 left, bit 1 right)
+static int ToolbarWindowHeight();
+static void DrawToolbar();
+static void LaunchConfigurator();
+static bool setupChecked = false;													// Opened the configurator for a fresh install (once)
+
 static void TimedSetSize()
 	{
 	if (vga.mode == M_TEXT && ttf.fullScrn)
@@ -89,6 +105,14 @@ static void TimedSetSize()
 		sdl.surface = SDL_SetVideoMode(sdl.width, sdl.height, 32, SDL_SWSURFACE|(winFramed ? 0 : SDL_NOFRAME));
 	if (!sdl.surface)
 		E_Exit("SDL: Failed to create surface");
+	if (toolbarH)
+		DrawToolbar();
+	if (!setupChecked)																// First time the window shows: not set up yet? Open vDos Config
+		{
+		setupChecked = true;
+		if (vDos_NeedsSetup())
+			LaunchConfigurator();													// vDos stays at the C prompt behind it
+		}
 	if (initialX >= 0)																// Position window (only once at startup)
 		{
 		RECT SDLRect;
@@ -103,10 +127,13 @@ static void TimedSetSize()
 
 void GFX_SetSize()
 	{
+	toolbarH = (vga.mode == M_TEXT && !ttf.fullScrn) ? ToolbarWindowHeight() : 0;
 	if (vga.mode == M_TEXT)
 		{
 		sdl.width = ttf.cols*ttf.width;
-		sdl.height = ttf.lins*ttf.height;
+		sdl.height = ttf.lins*ttf.height + toolbarH;
+		if (!ttf.fullScrn)
+			ttf.offY = toolbarH;
 		}
 	else
 		{
@@ -173,7 +200,10 @@ void GFX_SelectFontByPoints(int ptsize)
 		ttf.offY = (GetSystemMetrics(SM_CYSCREEN)-ttf.height*ttf.lins)/2;
 		}
 	else
-		ttf.offX = ttf.offY = 0;
+		{
+		ttf.offX = 0;
+		ttf.offY = toolbarH;														// Text starts below the vDos toolbar (0 when it is off)
+		}
 	if (!codepage)
 		{
 		int cp = GetOEMCP();
@@ -501,6 +531,8 @@ static void increaseFontSize()
 			maxWidth -= GetSystemMetrics(SM_CXBORDER)*2;
 			maxHeight -= GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CYBORDER)*2;
 			}
+		if (!ttf.fullScrn)
+			maxHeight -= ToolbarWindowHeight();
 		GFX_SelectFontByPoints(ttf.pointsize + (ttf.vDos ? 2 : 1));
 		if (ttf.cols*ttf.width <= maxWidth && ttf.lins*ttf.height <= maxHeight)		// if it fits on screen
 			{
@@ -544,8 +576,208 @@ void readTTF(const char *fName)														// Open and read alternative font
 	ConfAddError("Could not load TTF font file\n", (char *)fName);
 	}
 
+// Opens the vDos configurator. Where it lives depends on how vDos was installed:
+//   ConfigUI\vDosConfigWinUI.exe	MSI on Windows 10 1809+ (WinUI configurator in a subfolder)
+//   vDosConfig.exe					MSI on Windows 7 / FORCEWINFORMS=1 (WinForms, next to vDos.exe)
+//   ..\vDosConfigWinUI.exe			Microsoft Store package (vDos.exe is in the package's vDos\ folder)
+static void LaunchConfigurator()
+	{
+	static const char* candidates[] = {"ConfigUI\\vDosConfigWinUI.exe", "vDosConfig.exe", "..\\vDosConfigWinUI.exe"};
+	char exeDir[MAX_PATH];
+	strcpy_s(exeDir, sizeof(exeDir), _pgmptr);
+	char* slash = strrchr(exeDir, '\\');
+	if (slash)
+		slash[1] = 0;
+	for (int i = 0; i < 3; i++)
+		{
+		char path[MAX_PATH], full[MAX_PATH];
+		sprintf_s(path, sizeof(path), "%s%s", exeDir, candidates[i]);
+		if (!GetFullPathNameA(path, sizeof(full), full, NULL) || GetFileAttributesA(full) == INVALID_FILE_ATTRIBUTES)
+			continue;
+		char dir[MAX_PATH];
+		strcpy_s(dir, sizeof(dir), full);
+		char* dirEnd = strrchr(dir, '\\');
+		if (dirEnd)
+			*dirEnd = 0;
+		if ((INT_PTR)ShellExecuteA(sdlHwnd, "open", full, NULL, dir, SW_SHOWNORMAL) > 32)
+			return;
+		char msg[MAX_PATH + 96];
+		sprintf_s(msg, sizeof(msg), "Could not start the vDos configurator:\n%s", full);
+		MessageBoxA(sdlHwnd, msg, "vDos", MB_OK|MB_ICONWARNING);
+		return;
+		}
+	MessageBoxA(sdlHwnd, "The vDos configurator was not found next to vDos.exe.\nReinstall vDos 2026 to add it.", "vDos", MB_OK|MB_ICONWARNING);
+	}
+
+// ---------------------------------------------------------------- vDos 2026 toolbar
+
+#define TOOLBAR_BUTTONS 3
+static const char* toolbarLabels[TOOLBAR_BUTTONS] = {"A-", "A+", "vDos Config"};	// Smaller text, larger text, configurator
+static const bool toolbarHasIcon[TOOLBAR_BUTTONS] = {false, false, true};
+static RECT toolbarRects[TOOLBAR_BUTTONS];
+
+static int ToolbarScale(int px)														// 96 dpi pixels to screen pixels
+	{
+	static int dpi = 0;
+	if (!dpi)
+		{
+		HDC dc = GetDC(NULL);
+		dpi = dc ? GetDeviceCaps(dc, LOGPIXELSY) : 96;
+		if (dc)
+			ReleaseDC(NULL, dc);
+		if (dpi <= 0)
+			dpi = 96;
+		}
+	return MulDiv(px, dpi, 96);
+	}
+
+static int ToolbarWindowHeight()													// Bar height when the window is in framed text mode
+	{
+	return (toolbarOn && winFramed) ? ToolbarScale(42) : 0;
+	}
+
+static void ToolbarRoundRect(HDC dc, const RECT& r, COLORREF color)
+	{
+	HBRUSH brush = CreateSolidBrush(color);
+	HPEN pen = CreatePen(PS_SOLID, 1, color);
+	HGDIOBJ oldBrush = SelectObject(dc, brush);
+	HGDIOBJ oldPen = SelectObject(dc, pen);
+	RoundRect(dc, r.left, r.top, r.right, r.bottom, ToolbarScale(8), ToolbarScale(8));
+	SelectObject(dc, oldBrush);
+	SelectObject(dc, oldPen);
+	DeleteObject(brush);
+	DeleteObject(pen);
+	}
+
+// Draws the bar with GDI into a DIB, then copies it into the top rows of the SDL surface,
+// so SDL's own repaints (which blit the whole surface) keep it.
+static void DrawToolbar()
+	{
+	if (!toolbarH || !sdl.surface || !sdl.surface->pixels || sdl.surface->format->BytesPerPixel != 4 || sdl.surface->h < toolbarH)
+		return;
+	int w = sdl.surface->w;
+	int h = toolbarH;
+
+	BITMAPINFO bmi;
+	ZeroMemory(&bmi, sizeof(bmi));
+	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bmi.bmiHeader.biWidth = w;
+	bmi.bmiHeader.biHeight = -h;													// Top-down
+	bmi.bmiHeader.biPlanes = 1;
+	bmi.bmiHeader.biBitCount = 32;
+	bmi.bmiHeader.biCompression = BI_RGB;
+	void* bits = NULL;
+	HDC winDC = GetDC(sdlHwnd);
+	HDC dc = CreateCompatibleDC(winDC);
+	HBITMAP bmp = CreateDIBSection(winDC, &bmi, DIB_RGB_COLORS, &bits, NULL, 0);
+	ReleaseDC(sdlHwnd, winDC);
+	if (!dc || !bmp || !bits)
+		{
+		if (bmp)
+			DeleteObject(bmp);
+		if (dc)
+			DeleteDC(dc);
+		return;
+		}
+	HGDIOBJ oldBmp = SelectObject(dc, bmp);
+
+	RECT all = {0, 0, w, h};
+	HBRUSH back = CreateSolidBrush(RGB(0x5E, 0x66, 0x34));					// vDos olive (logo / configurator accent)
+	FillRect(dc, &all, back);
+	DeleteObject(back);
+	RECT line = {0, h-1, w, h};
+	HBRUSH lineBrush = CreateSolidBrush(RGB(0x40, 0x46, 0x22));
+	FillRect(dc, &line, lineBrush);
+	DeleteObject(lineBrush);
+
+	HFONT font = CreateFontA(-MulDiv(12, ToolbarScale(96), 72), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH|FF_SWISS, "Segoe UI");
+	HGDIOBJ oldFont = SelectObject(dc, font);
+	SetBkMode(dc, TRANSPARENT);
+	int iconSize = ToolbarScale(20);
+	HICON icon = (HICON)LoadImageA(GetModuleHandle(NULL), "vDos_ico", IMAGE_ICON, iconSize, iconSize, 0);
+
+	// Buttons, right-aligned
+	int right = w - ToolbarScale(8);
+	for (int i = TOOLBAR_BUTTONS-1; i >= 0; i--)
+		{
+		SIZE text;
+		GetTextExtentPoint32A(dc, toolbarLabels[i], (int)strlen(toolbarLabels[i]), &text);
+		int iconPart = toolbarHasIcon[i] ? iconSize + ToolbarScale(8) : 0;
+		int width = toolbarHasIcon[i] ? ToolbarScale(10) + iconPart + (int)text.cx + ToolbarScale(14) : max(ToolbarScale(36), (int)text.cx + ToolbarScale(20));
+		RECT r = {right-width, ToolbarScale(6), right, h-1-ToolbarScale(6)};
+		toolbarRects[i] = r;
+		if (i == toolbarHover && i == toolbarPressed)								// Light pill on the olive bar: pressed / hover / rest
+			ToolbarRoundRect(dc, r, RGB(0xD9, 0xDF, 0xBC));
+		else if (i == toolbarHover || i == toolbarPressed)
+			ToolbarRoundRect(dc, r, RGB(0xFF, 0xFF, 0xFF));
+		else
+			ToolbarRoundRect(dc, r, RGB(0xEE, 0xF1, 0xDE));
+		if (icon && toolbarHasIcon[i])
+			DrawIconEx(dc, r.left+ToolbarScale(10), (r.top+r.bottom-iconSize)/2, icon, iconSize, iconSize, 0, NULL, DI_NORMAL);
+		RECT textRect = {toolbarHasIcon[i] ? r.left+ToolbarScale(10)+iconPart : r.left, r.top, r.right, r.bottom};
+		SetTextColor(dc, RGB(0x2B, 0x2F, 0x18));
+		DrawTextA(dc, toolbarLabels[i], -1, &textRect, DT_SINGLELINE|DT_VCENTER|(toolbarHasIcon[i] ? DT_LEFT : DT_CENTER)|DT_NOPREFIX);
+		right = r.left - ToolbarScale(4);
+		}
+
+	// The left side is left empty for now (the title bar already names the window); a later
+	// app switcher for several DOS programs would go here.
+
+	GdiFlush();
+	for (int y = 0; y < h; y++)														// Software surface: written directly, as GFX_EndUpdate does
+		memcpy((Bit8u*)sdl.surface->pixels + y*sdl.surface->pitch, (Bit8u*)bits + y*w*4, w*4);
+
+	if (icon)
+		DestroyIcon(icon);
+	SelectObject(dc, oldFont);
+	DeleteObject(font);
+	SelectObject(dc, oldBmp);
+	DeleteObject(bmp);
+	DeleteDC(dc);
+	SDL_UpdateRect(sdl.surface, 0, 0, w, h);
+	}
+
+static int ToolbarHit(int x, int y)
+	{
+	POINT pt = {x, y};
+	for (int i = 0; i < TOOLBAR_BUTTONS; i++)
+		if (PtInRect(&toolbarRects[i], pt))
+			return i;
+	return -1;
+	}
+
+static void ToolbarSetHover(int hover)
+	{
+	if (hover == toolbarHover)
+		return;
+	toolbarHover = hover;
+	DrawToolbar();
+	}
+
+static void ToolbarCommand(int button)
+	{
+	switch (button)
+		{
+	case 0:
+		decreaseFontSize();															// Same as Win+F11
+		break;
+	case 1:
+		increaseFontSize();															// Same as Win+F12
+		break;
+	case 2:
+		LaunchConfigurator();
+		break;
+		}
+	}
+
 static LRESULT CALLBACK SysMenuExtendWndProc(HWND hwnd, UINT uiMsg, WPARAM wparam, LPARAM lparam)
 	{
+	if (uiMsg == WM_MOUSELEAVE)														// Mouse left the window: drop the toolbar highlight
+		{
+		toolbarTracking = false;
+		toolbarPressed = -1;
+		ToolbarSetHover(-1);
+		}
 	if (uiMsg  == WM_SYSCOMMAND)
 		{
 		if (aboutShown || selectingText)											// Selecting text can't be set at this time, but...
@@ -558,8 +790,12 @@ static LRESULT CALLBACK SysMenuExtendWndProc(HWND hwnd, UINT uiMsg, WPARAM wpara
 			{
 		case WM_SC_SYSMENUABOUT:
 			{
-			char info[] = "vDos version yyyy.mm.dd - by Jos Schaars,\n\nderived from DOSBox - by the DOSBox team,\n\ntherefore also published under the GNU GPL.";
-			strncpy(info+13, vDosVersion, 10);
+			char info[512];
+			sprintf_s(info, sizeof(info),
+				"vDos 2026 version %s - by Jim Kirker (jkirkerx.com),\n\n"
+				"based on vDos - by Jos Schaars,\n\n"
+				"derived from DOSBox - by the DOSBox team,\n\n"
+				"therefore also published under the GNU GPL.", vDosVersion);
 
 			HDC hDC = GetDC(sdlHwnd);
 			RECT rect;
@@ -599,6 +835,9 @@ static LRESULT CALLBACK SysMenuExtendWndProc(HWND hwnd, UINT uiMsg, WPARAM wpara
 			return 0;
 		case WM_SC_SYSMENUINCREASE:
 			increaseFontSize();
+			return 0;
+		case WM_SC_SYSMENUCONFIG:
+			LaunchConfigurator();
 			return 0;
 			}
 		}
@@ -696,20 +935,7 @@ bool setWinInitial(const char *winDef)
 
 void GUI_StartUp()
 	{
-	STARTUPINFO si;
-	ZeroMemory(&si, sizeof(si));
-	si.cb = sizeof(si);
-	GetStartupInfo(&si);
-	if (char *p = strrchr(si.lpTitle, '\\'))										// Set title bar to shortcut name of vDos
-		{
-		char caption[1024];
-		strcpy(caption, p+1);
-		if (p = strrchr(caption, '.'))
-			*p = 0;
-		SDL_WM_SetCaption(caption, caption);
-		}
-	else
-		SDL_WM_SetCaption("vDos", "vDos");
+	SDL_WM_SetCaption("vDos 2026", "vDos 2026");									// Always the product name (was: the shortcut or exe name)
 
 	SDL_SysWMinfo wminfo;
 	SDL_VERSION(&wminfo.version);
@@ -740,6 +966,7 @@ void GUI_StartUp()
 
 	usesMouse = ConfGetBool("mouse");
 	winFramed = ConfGetBool("frame");
+	toolbarOn = ConfGetBool("toolbar");
 	sdl.scale = ConfGetInt("scale");
 	eurAscii = ConfGetInt("euro");
 	if (eurAscii != -1 && (eurAscii < 33 || eurAscii > 255))
@@ -801,6 +1028,8 @@ void GUI_StartUp()
 			sdl.scale = 9;
 		}
 
+	if (!ttf.fullScrn)
+		maxHeight -= ToolbarWindowHeight();											// Leave room for the vDos toolbar
 	int	curSize = 30;																// No clear idea what would be a good starting value
 	int lastGood = -1;
 	int trapLoop = 0;
@@ -831,6 +1060,8 @@ void GUI_StartUp()
 	RemoveMenu(hSysMenu, SC_SIZE, MF_BYCOMMAND);
 	RemoveMenu(hSysMenu, SC_RESTORE, MF_BYCOMMAND);
 
+	AppendMenu(hSysMenu, MF_SEPARATOR, NULL, "");
+	AppendMenu(hSysMenu, MF_STRING, WM_SC_SYSMENUCONFIG,	MSG_Get("SYSMENU:CONFIG"));
 	AppendMenu(hSysMenu, MF_SEPARATOR, NULL, "");
     AppendMenu(hSysMenu, MF_STRING, WM_SC_SYSMENUPCOPY,		MSG_Get("SYSMENU:COPY"));
     AppendMenu(hSysMenu, MF_STRING, WM_SC_SYSMENUPASTE,		MSG_Get("SYSMENU:PASTE"));
@@ -866,16 +1097,31 @@ void GFX_Events()
 		switch (event.type)
 			{
 		case SDL_MOUSEMOTION:
+			if (toolbarH)															// vDos toolbar: the bar handles the mouse, DOS gets coordinates below it
+				{
+				if (event.motion.y < toolbarH && !selectingText)
+					{
+					if (!toolbarTracking)
+						{
+						TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT), TME_LEAVE, sdlHwnd, 0};
+						toolbarTracking = TrackMouseEvent(&tme) != 0;
+						}
+					ToolbarSetHover(ToolbarHit(event.motion.x, event.motion.y));
+					break;
+					}
+				ToolbarSetHover(-1);
+				event.motion.y = event.motion.y < toolbarH ? 0 : event.motion.y - toolbarH;
+				}
 			if (selectingText)
 				{
-				RECT selBox1 = {selPosX1*ttf.width, selPosY1*ttf.height, selPosX2*ttf.width+ttf.width, selPosY2*ttf.height+ttf.height};
+				RECT selBox1 = {selPosX1*ttf.width, selPosY1*ttf.height+ttf.offY, selPosX2*ttf.width+ttf.width, selPosY2*ttf.height+ttf.height+ttf.offY};
 				int newX = event.button.x/ttf.width;
 				selPosX1 = min(selStartX, newX);
 				selPosX2 = max(selStartX, newX);
 				int newY = event.button.y/ttf.height;
 				selPosY1 = min(selStartY, newY);
 				selPosY2 = max(selStartY, newY);
-				RECT selBox2 = {selPosX1*ttf.width, selPosY1*ttf.height, selPosX2*ttf.width+ttf.width, selPosY2*ttf.height+ttf.height};
+				RECT selBox2 = {selPosX1*ttf.width, selPosY1*ttf.height+ttf.offY, selPosX2*ttf.width+ttf.width, selPosY2*ttf.height+ttf.height+ttf.offY};
 				if (memcmp(&selBox1, &selBox2, sizeof(RECT)))						// Update selected block if needed
 					{
 					HDC hDC = GetDC(sdlHwnd);
@@ -967,12 +1213,47 @@ void GFX_Events()
 				selectingText = false;
 				return;
 				}
+			if (toolbarH)															// vDos toolbar
+				{
+				bool leftButton = event.button.button == SDL_BUTTON_LEFT;
+				bool pressed = event.button.state == SDL_PRESSED;
+				if (event.button.y < toolbarH)
+					{
+					int hit = ToolbarHit(event.button.x, event.button.y);
+					if (leftButton && pressed)
+						{
+						toolbarPressed = hit;
+						DrawToolbar();
+						}
+					else if (leftButton)
+						{
+						int wasPressed = toolbarPressed;
+						toolbarPressed = -1;
+						DrawToolbar();
+						if (wasPressed >= 0 && wasPressed == hit)
+							ToolbarCommand(hit);
+						}
+					Bit8u bit = event.button.button == SDL_BUTTON_LEFT ? 1 : event.button.button == SDL_BUTTON_RIGHT ? 2 : 0;
+					if (!pressed && (dosMouseButtons & bit))						// Pressed in the DOS area, released over the bar: DOS still needs the release
+						{
+						dosMouseButtons &= ~bit;
+						Mouse_ButtonReleased(event.button.button>>1);
+						}
+					break;
+					}
+				if (leftButton && !pressed && toolbarPressed >= 0)					// Pressed on the bar, released below it: no command
+					{
+					toolbarPressed = -1;
+					DrawToolbar();
+					}
+				event.button.y -= toolbarH;
+				}
 			// [Win][Ctrl+Left mouse button starts block select for clipboard copy
 			if (vga.mode == M_TEXT && !ttf.fullScrn && event.button.state == SDL_PRESSED && ((GetKeyState(VK_LCONTROL)&0x80) || (GetKeyState(VK_RCONTROL)&0x80)) && ((GetKeyState(VK_LWIN)&0x80) || (GetKeyState(VK_RWIN)&0x80)))
 				{
 				selStartX = selPosX1 = selPosX2 = event.button.x/ttf.width;
 				selStartY = selPosY1 = selPosY2 = event.button.y/ttf.height;
-				RECT selBox = {selPosX1*ttf.width, selPosY1*ttf.height, selPosX2*ttf.width+ttf.width, selPosY2*ttf.height+ttf.height};
+				RECT selBox = {selPosX1*ttf.width, selPosY1*ttf.height+ttf.offY, selPosX2*ttf.width+ttf.width, selPosY2*ttf.height+ttf.height+ttf.offY};
 				HDC hDC = GetDC(sdlHwnd);
 				InvertRect(hDC, &selBox);
 				ReleaseDC(sdlHwnd, hDC);
@@ -1000,10 +1281,17 @@ void GFX_Events()
 					if (event.button.x < 0 || event.button.x >= sdl.width || event.button.y < 0 || event.button.y >= sdl.height)
 						break;
 					}
+				Bit8u bit = event.button.button == SDL_BUTTON_LEFT ? 1 : 2;
 				if (event.button.state == SDL_PRESSED)
+					{
+					dosMouseButtons |= bit;
 					Mouse_ButtonPressed(event.button.button>>1);
+					}
 				else
+					{
+					dosMouseButtons &= ~bit;
 					Mouse_ButtonReleased(event.button.button>>1);
+					}
 				}
 			break;
 			}
@@ -1060,7 +1348,7 @@ void GFX_Events()
 					else if (winFramed)												// First switch to window mode with frame and maximized font size could give a too big window
 						{
 						int maxWidth = GetSystemMetrics(SM_CXSCREEN) - GetSystemMetrics(SM_CXBORDER)*2;
-						int maxHeight = GetSystemMetrics(SM_CYSCREEN) - GetSystemMetrics(SM_CYCAPTION) - GetSystemMetrics(SM_CYBORDER)*2;
+						int maxHeight = GetSystemMetrics(SM_CYSCREEN) - GetSystemMetrics(SM_CYCAPTION) - GetSystemMetrics(SM_CYBORDER)*2 - ToolbarWindowHeight();
 						if (ttf.cols*ttf.width > maxWidth || ttf.lins*ttf.height > maxHeight)	// If it doesn't fits on screen
 							GFX_SelectFontByPoints(ttf.pointsize - (ttf.vDos ? 2 : 1));			// Should do the trick
 						}
@@ -1237,6 +1525,7 @@ static void ParseStartupOptions(char* cmdLine)
 	}
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 	{
+	vDos_PrepareDataFolder();												// Store and MSI installs: each user's setup in %LOCALAPPDATA%\vDos 2026
 	ParseStartupOptions(lpCmdLine);
 
 	try

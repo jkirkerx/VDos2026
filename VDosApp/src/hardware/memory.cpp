@@ -8,6 +8,7 @@
 #include "bios.h"
 #include "regs.h"
 #include "dos_system.h"
+#include "appdata.h"
 
 static PageHandler * pageHandlers[64];												// Pagehandlers for first MB
 
@@ -270,13 +271,7 @@ static bool WritePageFaultDiagnostics(const char* faultType, LinPt addr, Bit32u 
 	sprintf_s(basename, "vDos-%s-%04u%02u%02u-%02u%02u%02u-%03u-p%lu.log",
 		normalExit ? "exit" : "pagefault", now.wYear, now.wMonth, now.wDay,
 		now.wHour, now.wMinute, now.wSecond, now.wMilliseconds, GetCurrentProcessId());
-	strncpy_s(filename, filenameSize, _pgmptr ? _pgmptr : "vDos.exe", _TRUNCATE);
-	char* separator = strrchr(filename, '\\');
-	if (separator)
-		separator[1] = 0;
-	else
-		filename[0] = 0;
-	strcat_s(filename, filenameSize, basename);
+	vDos_OutputPath(filename, filenameSize, basename);						// Next to vDos.exe, or the Store data folder
 	FILE* traceFile = fopen(filename, "a");
 	if (!traceFile)
 		return false;

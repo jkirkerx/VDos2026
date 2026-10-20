@@ -202,6 +202,7 @@
     <ClCompile Include="VDosApp\src\shell\shell_batch.cpp" />
     <ClCompile Include="VDosApp\src\shell\shell_cmds.cpp" />
     <ClCompile Include="VDosApp\src\shell\shell_misc.cpp" />
+    <ClCompile Include="VDosApp\src\misc\appdata.cpp" />
     <ClCompile Include="VDosApp\src\misc\messages.cpp" />
     <ClCompile Include="VDosApp\src\misc\programs.cpp" />
     <ClCompile Include="VDosApp\src\misc\setup.cpp" />
@@ -250,6 +251,7 @@
     <ClInclude Include="VDosApp\include\vdos.h" />
     <ClInclude Include="VDosApp\include\inout.h" />
     <ClInclude Include="VDosApp\include\logging.h" />
+    <ClInclude Include="VDosApp\include\appdata.h" />
     <ClInclude Include="VDosApp\include\mem.h" />
     <ClInclude Include="VDosApp\include\mouse.h" />
     <ClInclude Include="VDosApp\include\paging.h" />

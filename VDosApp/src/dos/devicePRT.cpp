@@ -6,6 +6,7 @@
 #include <time.h>
 #include "vDos.h"
 #include "support.h"
+#include "appdata.h"
 
 void LPT_CheckTimeOuts(Bit32u mSecsCurr)
 	{
@@ -345,7 +346,7 @@ static bool ParseSpoolPrinterDestination(const std::string& destination, std::st
 
 	return false;
 	}
-static bool WriteRawToPrinterQueue(const char* printerName, const std::string& data, std::string& detail)
+static bool WriteRawToPrinterQueue(const char* printerName, const char* portName, const std::string& data, std::string& detail)
 	{
 	HANDLE printer = NULL;
 	if (!OpenPrinterA((LPSTR)printerName, &printer, NULL))
@@ -354,8 +355,10 @@ static bool WriteRawToPrinterQueue(const char* printerName, const std::string& d
 		return false;
 		}
 
+	char docName[64];												// vDosConfig's Print queues page looks for the "vDos print job" prefix
+	sprintf_s(docName, sizeof(docName), "vDos print job (%s)", portName);
 	DOC_INFO_1A docInfo;
-	docInfo.pDocName = (LPSTR)"vDos print job";
+	docInfo.pDocName = docName;
 	docInfo.pOutputFile = NULL;
 	docInfo.pDatatype = (LPSTR)"RAW";
 
@@ -514,7 +517,7 @@ void device_PRT::CommitData()
 	std::string detail;
 	if (ParseSpoolPrinterDestination(destination, printerName, detail))
 		{
-		bool sent = WriteRawToPrinterQueue(printerName.c_str(), rawdata, detail);
+		bool sent = WriteRawToPrinterQueue(printerName.c_str(), GetName(), rawdata, detail);
 		LogPrintStatus(tcpLog, GetName(), "PRINTER", LogToken(printerName).c_str(), rawdata.size(), sent, detail, tcpRawDump);
 		if (!sent)
 			MessageBox(sdlHwnd, detail.c_str(), "vDos - Printer Queue Error", MB_OK|MB_ICONWARNING);
@@ -722,30 +725,26 @@ device_PRT::device_PRT(const char *pname, const char* cmd)
 //	5.	<Windows command/program> [options]		: Fallthru, cCommand/program [options] is started.
 	SetName(pname);
 
-	strncpy(tmpAscii, _pgmptr, sizeof(tmpAscii)-1);
-	tmpAscii[sizeof(tmpAscii)-1] = 0;
-	if (char* lastSlash = strrchr(tmpAscii, '\\'))
-		sprintf_s(lastSlash+1, sizeof(tmpAscii)-(lastSlash+1-tmpAscii), "#%s.asc", pname);
-	else
-		sprintf_s(tmpAscii, sizeof(tmpAscii), "#%s.asc", pname);
-	strncpy(tmpUnicode, _pgmptr, sizeof(tmpUnicode)-1);
-	tmpUnicode[sizeof(tmpUnicode)-1] = 0;
-	if (char* lastSlash = strrchr(tmpUnicode, '\\'))
-		sprintf_s(lastSlash+1, sizeof(tmpUnicode)-(lastSlash+1-tmpUnicode), "#%s.txt", pname);
-	else
-		sprintf_s(tmpUnicode, sizeof(tmpUnicode), "#%s.txt", pname);
-		strncpy(tcpLog, _pgmptr, sizeof(tcpLog)-1);
-	tcpLog[sizeof(tcpLog)-1] = 0;
-	if (char* lastSlash = strrchr(tcpLog, '\\'))
-		sprintf_s(lastSlash+1, sizeof(tcpLog)-(lastSlash+1-tcpLog), "#%s.tcp.log", pname);
-	else
-		sprintf_s(tcpLog, sizeof(tcpLog), "#%s.tcp.log", pname);
-	strncpy(tcpRaw, _pgmptr, sizeof(tcpRaw)-1);
-	tcpRaw[sizeof(tcpRaw)-1] = 0;
-	if (char* lastSlash = strrchr(tcpRaw, '\\'))
-		sprintf_s(lastSlash+1, sizeof(tcpRaw)-(lastSlash+1-tcpRaw), "#%s.tcp.raw", pname);
-	else
-		sprintf_s(tcpRaw, sizeof(tcpRaw), "#%s.tcp.raw", pname);
+	{
+	char fileName[32];
+	sprintf_s(fileName, sizeof(fileName), "#%s.asc", pname);
+	vDos_OutputPath(tmpAscii, sizeof(tmpAscii), fileName);		// Next to vDos.exe, or the Store data folder
+	}
+	{
+	char fileName[32];
+	sprintf_s(fileName, sizeof(fileName), "#%s.txt", pname);
+	vDos_OutputPath(tmpUnicode, sizeof(tmpUnicode), fileName);		// Next to vDos.exe, or the Store data folder
+	}
+	{
+	char fileName[32];
+	sprintf_s(fileName, sizeof(fileName), "#%s.tcp.log", pname);
+	vDos_OutputPath(tcpLog, sizeof(tcpLog), fileName);		// Next to vDos.exe, or the Store data folder
+	}
+	{
+	char fileName[32];
+	sprintf_s(fileName, sizeof(fileName), "#%s.tcp.raw", pname);
+	vDos_OutputPath(tcpRaw, sizeof(tcpRaw), fileName);		// Next to vDos.exe, or the Store data folder
+	}
 	DPhandle = -1;
 	tcpConfigured = false;
 	tcpPort = 0;
