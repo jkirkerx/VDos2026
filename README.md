@@ -4,7 +4,7 @@ vDos 2026 runs legacy DOS business applications on Windows. This repository cont
 
 ## Buy the packaged edition
 
-[Buy vDos 2026 on the Microsoft Store](https://apps.microsoft.com/detail/9N122DMJRSN8).
+[Buy vDos 2026 on the Microsoft Store](https://apps.microsoft.com/detail/9n122dmjrsn8?hl=en-US&gl=US).
 
 The Store edition provides the packaged application and configuration interface. This source repository contains the vDos application; it does not include the installer, configurator, print monitor, or Windows notification helper projects.
 
