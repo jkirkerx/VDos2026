@@ -1,50 +1,41 @@
-# vDos 2026
+# vDos 2026 — Source Code
 
-vDos 2026 runs legacy DOS business applications on Windows. This repository contains the vDos C++ application source and its required SDL and FreeType dependencies, maintained by [Jim Kirker](https://jkirkerx.com).
+vDos 2026 runs legacy DOS business applications on Windows, with compatibility and memory-handling fixes maintained by [Jim Kirker](https://jkirkerx.com).
 
-## Buy the packaged edition
+## Want to try vDos 2026?
 
-[Buy vDos 2026 on the Microsoft Store](https://apps.microsoft.com/detail/9n122dmjrsn8?hl=en-US&gl=US).
+**[Get vDos 2026 from the Microsoft Store](https://apps.microsoft.com/detail/9n122dmjrsn8?hl=en-US&gl=US)** to download and use the packaged application, including its configuration interface.
 
-The Store edition provides the packaged application and configuration interface. This source repository contains the vDos application; it does not include the installer, configurator, print monitor, or Windows notification helper projects.
+## Purpose of this repository
 
-## Latest memory fix: runaway REP string operations
+This repository publishes the vDos application source code to meet the source-sharing requirements of its open-source license. It is a source-code repository, not the distribution channel for the packaged product. To try or use vDos 2026, please download it from the Microsoft Store using the link above.
 
-The October 8, 2026 fix addresses intermittent memory corruption and crashes observed while running FoxPro/AccountMate, including during memo entry, scrolling, and nested screens.
+The source includes the C++ application, its SDL and FreeType dependencies, and Visual Studio build files. The installer, configurator, print monitor, and Windows notification helper projects are not included here.
 
-The CPU execution loop decrements its cycle counter before executing an instruction, so the last instruction in a time slice can run with zero cycles remaining. The REP string-operation handler previously clamped its iteration count to that zero value. Its `do ... while (--count)` loops then underflowed the unsigned counter to `0xFFFFFFFF`, allowing a copy or fill to continue far beyond its intended buffer. Depending on direction and mappings, this could overwrite application data or page tables, fault on an unmapped page, or stall.
+## What is fixed?
 
-In `VDosApp/src/cpu/core_normal/string.h`, the handler now uses at least one available cycle:
+### Runaway memory copies and intermittent crashes
 
-```cpp
-Bits cyclesAvail = CPU_Cycles > 0 ? CPU_Cycles : 1;
-```
+The October 8, 2026 fix corrects a REP string-operation bug associated with intermittent memory corruption, stalls, and crashes observed in FoxPro/AccountMate during memo entry, scrolling, and nested screens.
 
-The clamp uses this positive value, and remaining work resumes through the existing instruction-restart path. This prevents a zero-count pass from entering those loops.
+At the end of a CPU time slice, the emulator could reduce a repeated copy or fill operation to zero iterations. Its loop counter then underflowed, allowing the operation to continue far beyond the intended buffer. That could overwrite application data or page tables, or reach unmapped memory.
 
-The project notes record an A/B test with the final REPSTALL reproducer: the pre-fix build stalled after approximately 13,000 REP operations, while the fixed Release build completed 300,000 operations with `OK`. These are recorded development results, not a claim that every production compatibility issue has been resolved.
+The fix in `VDosApp/src/cpu/core_normal/string.h` ensures that each execution pass has at least one available iteration and defers the remaining work through the existing instruction-restart path.
 
-Earlier paging corrections are also retained: CR3 reloads flush cached translations, paging-state changes invalidate caches, INVLPG invalidates translations, and accesses crossing 4 KB page boundaries translate both pages. Those fixes are separate from the REP counter-underflow bug.
+In the recorded REPSTALL A/B test, the pre-fix build stalled after approximately 13,000 REP operations; the fixed Release build completed 300,000 operations with `OK`. This verifies the reproduced bug fix; it does not establish that every application compatibility issue is resolved.
 
-## Build from source
+### Protected-mode memory translation
 
-Open `vDos.sln` in Visual Studio with the Desktop development with C++ workload, the v145 platform toolset, and Windows SDK 10.0.26100.0. Build **Release | Win32**, or run from a Visual Studio developer shell:
+The source also retains corrections to cached address translations and paging:
 
-```powershell
-msbuild vDos.vcxproj /p:Configuration=Release /p:Platform=Win32
-```
+- CR3 reloads flush cached translations.
+- Paging-state changes and INVLPG invalidate cached translations.
+- Memory accesses crossing a 4 KB page boundary translate both pages correctly.
 
-The executable is written to `Release/vDos.exe`. The project copies `SDL.dll` and the default `config.txt` and `autoexec.txt` into the output folder when needed. Review those configuration files and set the working directory and DOS application commands for your installation.
+These corrections are separate from the REP loop-counter fix.
 
-## Source layout
+## Source and license
 
-- `VDosApp/src/` and `VDosApp/include/`: emulator source and headers.
-- `VDosApp/Embedded/`: default runtime configuration files.
-- `VDosApp/bin/SDL.dll`: SDL runtime.
-- `VDosApp/SDL-1.2.15/` and `VDosApp/ft255/`: bundled build dependencies.
-- `VDosApp/font/`: font resources.
-- `vDos.vcxproj`, `vDos.vcxproj.filters`, and `vDos.sln`: C++ build files.
-
-## License
+Application source is under `VDosApp/src/` and `VDosApp/include/`. Bundled dependencies, fonts, and default configuration files are also under `VDosApp/`; the Visual Studio C++ build files are at the repository root.
 
 See [COPYING](COPYING) for the GNU General Public License. Bundled dependencies retain their respective license notices.
